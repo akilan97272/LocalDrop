@@ -1,0 +1,6 @@
+logs/*
+__pycache__/*
+venv/*
+uploads/*
+.secret_key
+localdrop.service
