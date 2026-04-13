@@ -380,6 +380,53 @@
       pointer-events: none; /* prevents weird click issues */
     }
     
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+    
+      border: 1px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+    
+      transition: all 0.2s ease;
+    }
+    
+    .copy-btn img {
+      width: 16px;
+      height: 16px;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    
+    /* hover */
+    .copy-btn:hover {
+      border-color: var(--accent);
+      background: rgba(79,142,247,0.08);
+    }
+    
+    .copy-btn:hover img {
+      opacity: 1;
+    }
+    
+    /* click feedback */
+    .copy-btn:active {
+      transform: scale(0.92);
+    }
+    
+    /* success state (optional 🔥) */
+    .copy-btn.copied {
+      border-color: var(--success);
+    }
+    
+    .copy-btn.copied img {
+      filter: brightness(1.5);
+    }
+    
     @media (max-width: 480px) {
       .qr-fab { display: block; }
     }
@@ -506,9 +553,9 @@
             <span class="clip-live-dot" id="clipLiveDot"></span>
             Live clipboard
           </span>
-          <div class="clip-recv-actions">
+          <!--<div class="clip-recv-actions">
             <button class="btn-copy-clip" id="copyBtn" onclick="copyReceived()">⎘ Copy</button>
-          </div>
+          </div>-->
         </div>
         <div id="clipList"></div>
         <div class="clip-recv-footer" id="clipUpdatedAt">—</div>
@@ -737,7 +784,9 @@ function renderClipboard(data) {
         <div class="clip-text">${escapeHtml(item.text)}</div>
         <div class="clip-meta">
           ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          <button onclick="copyText('${encodeURIComponent(item.text)}')">⎘</button>
+          <button class="copy-btn" onclick="copyText('${encodeURIComponent(item.text)}')">
+            <img src="{{ url_for('static', filename='copy.svg') }}" alt="copy" />
+          </button>
         </div>
       </div>
     `;
@@ -752,7 +801,7 @@ async function copyReceived() {
     btn.textContent = '✓ Copied!';
     btn.classList.add('copied');
     toast('Copied to clipboard!', 'success');
-    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+    setTimeout(() => { btn.textContent = ''; btn.classList.remove('copied'); }, 2000);
   } catch(_) {
     // fallback for older browsers
     const ta = document.createElement('textarea');
@@ -774,7 +823,19 @@ function escapeHtml(text) {
 
 function copyText(encoded) {
   const text = decodeURIComponent(encoded);
-  navigator.clipboard.writeText(text);
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text);
+  } else {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+
   toast('Copied!', 'success');
 }
 
