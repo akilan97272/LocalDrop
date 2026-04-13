@@ -7,28 +7,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
   <style>
-    /* ══════════════════════════════════════════
-       Design tokens
-    ══════════════════════════════════════════ */
     :root {
-      --bg:        #0d0f14;
-      --surface:   #161921;
-      --card:      #1c2030;
-      --border:    #252a3a;
-      --accent:    #4f8ef7;
-      --accent2:   #7c5cf7;
-      --success:   #3ecf8e;
-      --danger:    #f75f5f;
-      --warn:      #f7b955;
-      --text:      #e4e8f5;
-      --muted:     #6b7394;
-      --mono:      'Space Mono', monospace;
-      --sans:      'DM Sans', sans-serif;
+      --bg:      #0d0f14;
+      --surface: #161921;
+      --card:    #1c2030;
+      --border:  #252a3a;
+      --accent:  #4f8ef7;
+      --accent2: #7c5cf7;
+      --success: #3ecf8e;
+      --danger:  #f75f5f;
+      --warn:    #f7b955;
+      --text:    #e4e8f5;
+      --muted:   #6b7394;
+      --mono:    'Space Mono', monospace;
+      --sans:    'DM Sans', sans-serif;
     }
 
-    /* ══════════════════════════════════════════
-       Reset & base
-    ══════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -39,8 +33,6 @@
       line-height: 1.6;
       min-height: 100vh;
     }
-
-    /* Subtle grid background */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: 0;
@@ -51,9 +43,7 @@
       pointer-events: none;
     }
 
-    /* ══════════════════════════════════════════
-       Layout
-    ══════════════════════════════════════════ */
+    /* ── Layout ── */
     .app-wrap {
       position: relative; z-index: 1;
       max-width: 820px;
@@ -61,20 +51,13 @@
       padding: 24px 16px 80px;
     }
 
-    /* ══════════════════════════════════════════
-       Header
-    ══════════════════════════════════════════ */
+    /* ── Header ── */
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      padding-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px; padding-bottom: 20px;
       border-bottom: 1px solid var(--border);
     }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-    }
+    .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon {
       width: 38px; height: 38px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -82,215 +65,140 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 18px;
     }
-    .logo-text {
-      font-family: var(--mono);
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
+    .logo-text { font-family: var(--mono); font-size: 1.2rem; font-weight: 700; }
     .logo-text span { color: var(--accent); }
 
     .server-badge {
       display: flex; align-items: center; gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: border-color .2s, color .2s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      cursor: pointer; transition: border-color .2s, color .2s;
     }
     .server-badge:hover { border-color: var(--accent); color: var(--accent); }
     .server-badge .dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--success);
-      animation: pulse 2s infinite;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--success); animation: pulse 2s infinite;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: .4; }
-    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-    /* ══════════════════════════════════════════
-       Drop zone
-    ══════════════════════════════════════════ */
+    /* ── Tab bar ── */
+    .tabs {
+      display: flex; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+    .tab-btn {
+      flex: 1; padding: 9px 16px;
+      border: none; border-radius: 9px;
+      background: transparent; color: var(--muted);
+      font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .tab-btn.active {
+      background: var(--card); color: var(--text);
+      box-shadow: 0 1px 6px rgba(0,0,0,.3);
+    }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Drop zone ── */
     .drop-zone {
       position: relative;
       border: 2px dashed var(--border);
-      border-radius: 16px;
-      padding: 48px 24px;
+      border-radius: 16px; padding: 48px 24px;
       text-align: center;
-      cursor: pointer;
       transition: border-color .25s, background .25s;
       background: var(--surface);
       margin-bottom: 28px;
-      overflow: hidden;
-    }
-    .drop-zone::after {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(79,142,247,.06), rgba(124,92,247,.06));
-      opacity: 0;
-      transition: opacity .25s;
     }
     .drop-zone.drag-over,
-    .drop-zone:hover {
-      border-color: var(--accent);
-    }
-    .drop-zone.drag-over::after,
-    .drop-zone:hover::after { opacity: 1; }
-    .drop-zone.drag-over { background: rgba(79,142,247,.05); }
+    .drop-zone:hover { border-color: var(--accent); background: rgba(79,142,247,.04); }
 
-    .drop-icon {
-      font-size: 2.8rem;
-      margin-bottom: 12px;
-      display: block;
-      filter: drop-shadow(0 0 16px rgba(79,142,247,.5));
-    }
-    .drop-title {
-      font-size: 1.1rem;
-      font-weight: 500;
-      margin-bottom: 6px;
-    }
-    .drop-sub {
-      color: var(--muted);
-      font-size: 0.88rem;
-      margin-bottom: 20px;
-    }
+    .drop-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; filter: drop-shadow(0 0 16px rgba(79,142,247,.5)); }
+    .drop-title { font-size: 1.1rem; font-weight: 500; margin-bottom: 6px; }
+    .drop-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 20px; }
+
+    /* FIX: button NOT a label, triggers input via JS — avoids event-capture bug */
     #fileInput { display: none; }
     .btn-pick {
       display: inline-flex; align-items: center; gap: 8px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 10px 22px;
-      border-radius: 8px;
-      font-family: var(--sans);
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background .2s, transform .15s;
+      background: var(--accent); color: #fff;
+      border: none; padding: 10px 22px; border-radius: 8px;
+      font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: background .2s, transform .15s;
+      position: relative; z-index: 2;   /* sit above drop-zone hover layer */
     }
     .btn-pick:hover { background: #3a7de8; transform: translateY(-1px); }
     .btn-pick:active { transform: translateY(0); }
 
-    /* ══════════════════════════════════════════
-       Progress list (upload queue)
-    ══════════════════════════════════════════ */
-    #uploadQueue {
-      display: flex; flex-direction: column; gap: 10px;
-      margin-bottom: 28px;
-    }
+    /* ── Upload queue ── */
+    #uploadQueue { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
     .queue-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
       animation: slideIn .2s ease;
     }
-    @keyframes slideIn {
-      from { opacity:0; transform: translateY(-8px); }
-      to   { opacity:1; transform: translateY(0); }
-    }
-    .qi-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 8px;
-      font-size: 0.85rem;
-    }
+    @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    .qi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; }
     .qi-name { font-weight: 500; word-break: break-all; }
     .qi-status { color: var(--muted); font-family: var(--mono); font-size: 0.75rem; white-space: nowrap; margin-left: 12px; }
-    .qi-status.done   { color: var(--success); }
-    .qi-status.error  { color: var(--danger); }
-    .progress-bar-bg {
-      height: 4px; background: var(--border); border-radius: 99px; overflow: hidden;
-    }
+    .qi-status.done  { color: var(--success); }
+    .qi-status.error { color: var(--danger); }
+    .progress-bar-bg { height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
     .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 99px;
-      transition: width .2s ease;
-      width: 0%;
+      height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px; transition: width .2s ease; width: 0%;
     }
 
-    /* ══════════════════════════════════════════
-       Toast messages
-    ══════════════════════════════════════════ */
+    /* ── Toasts ── */
     #toast-container {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
-      display: flex; flex-direction: column; gap: 10px;
-      pointer-events: none;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
     }
     .toast {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: var(--card); border: 1px solid var(--border);
       border-left: 3px solid var(--accent);
-      border-radius: 8px;
-      padding: 12px 18px;
-      font-size: 0.88rem;
-      max-width: 300px;
-      pointer-events: all;
-      animation: toastIn .3s ease;
+      border-radius: 8px; padding: 12px 18px;
+      font-size: 0.88rem; max-width: 300px;
+      pointer-events: all; animation: toastIn .3s ease;
       box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
     .toast.success { border-left-color: var(--success); }
     .toast.error   { border-left-color: var(--danger); }
     .toast.warn    { border-left-color: var(--warn); }
-    @keyframes toastIn {
-      from { opacity:0; transform: translateX(20px); }
-      to   { opacity:1; transform: translateX(0); }
-    }
+    @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 
-    /* ══════════════════════════════════════════
-       File list section
-    ══════════════════════════════════════════ */
-    .section-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px;
-    }
-    .section-title {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      color: var(--muted);
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
+    /* ── Section header ── */
+    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .section-title { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
     .file-count-badge {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 2px 10px;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      color: var(--accent);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 99px; padding: 2px 10px;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--accent);
     }
 
+    /* ── File list ── */
     #fileList { display: flex; flex-direction: column; gap: 8px; }
-
     .file-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
       transition: border-color .2s, background .2s;
       animation: slideIn .25s ease;
     }
-    .file-card:hover {
-      border-color: rgba(79,142,247,.4);
-      background: #1e2438;
-    }
-
+    .file-card:hover { border-color: rgba(79,142,247,.4); background: #1e2438; }
     .file-icon {
       width: 40px; height: 40px; flex-shrink: 0;
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem;
-      background: var(--surface);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; background: var(--surface);
     }
     .file-icon.image   { background: rgba(62,207,142,.1); }
     .file-icon.video   { background: rgba(247,95,95,.1); }
@@ -298,118 +206,235 @@
     .file-icon.pdf     { background: rgba(247,95,95,.1); }
     .file-icon.archive { background: rgba(124,92,247,.1); }
     .file-icon.text    { background: rgba(79,142,247,.1); }
-
     .file-meta { flex: 1; min-width: 0; }
-    .file-name {
-      font-size: 0.92rem; font-weight: 500;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .file-details {
-      font-size: 0.76rem; color: var(--muted);
-      font-family: var(--mono);
-      display: flex; gap: 12px; flex-wrap: wrap;
-      margin-top: 2px;
-    }
-
+    .file-name { font-size: 0.92rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-details { font-size: 0.76rem; color: var(--muted); font-family: var(--mono); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
     .file-actions { display: flex; gap: 8px; flex-shrink: 0; }
     .btn-icon {
-      width: 34px; height: 34px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--muted);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem;
-      transition: all .18s;
-      text-decoration: none;
+      width: 34px; height: 34px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; transition: all .18s; text-decoration: none;
     }
-    .btn-icon:hover { color: var(--text); border-color: var(--muted); }
-    .btn-icon.danger:hover { color: var(--danger); border-color: var(--danger); background: rgba(247,95,95,.08); }
+    .btn-icon:hover         { color: var(--text); border-color: var(--muted); }
+    .btn-icon.danger:hover  { color: var(--danger); border-color: var(--danger); background: rgba(247,95,95,.08); }
     .btn-icon.primary:hover { color: var(--accent); border-color: var(--accent); background: rgba(79,142,247,.08); }
 
-    /* ══════════════════════════════════════════
-       Empty state
-    ══════════════════════════════════════════ */
-    .empty-state {
-      text-align: center;
-      padding: 56px 24px;
-      color: var(--muted);
-    }
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 56px 24px; color: var(--muted); }
     .empty-state .emoji { font-size: 3rem; display: block; margin-bottom: 12px; }
     .empty-state p { font-size: 0.9rem; }
 
-    /* ══════════════════════════════════════════
-       QR modal
-    ══════════════════════════════════════════ */
+    /* ── Clipboard panel ── */
+    .clipboard-layout { display: flex; flex-direction: column; gap: 16px; }
+
+    .clip-send-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .clip-send-box h3 {
+      font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .clip-send-box h3 span { color: var(--accent); }
+
+    #clipInput {
+      width: 100%; min-height: 120px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: var(--sans); font-size: 0.95rem;
+      padding: 12px 14px; resize: vertical;
+      outline: none; transition: border-color .2s;
+      line-height: 1.6;
+    }
+    #clipInput:focus { border-color: var(--accent); }
+    #clipInput::placeholder { color: var(--muted); }
+
+    .clip-send-row {
+      display: flex; gap: 10px; margin-top: 12px;
+      align-items: center; justify-content: flex-end;
+    }
+    .clip-char-count { font-size: 0.78rem; color: var(--muted); font-family: var(--mono); flex: 1; }
+    .btn-clip-send {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      border: none; padding: 9px 20px; border-radius: 8px;
+      font-family: var(--sans); font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: background .2s, transform .15s;
+    }
+    .btn-clip-send:hover { background: #3a7de8; transform: translateY(-1px); }
+    .btn-clip-send:active { transform: translateY(0); }
+    .btn-clip-clear {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 9px 16px; border-radius: 8px;
+      font-family: var(--sans); font-size: 0.9rem;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-clip-clear:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* Received clipboard */
+    .clip-recv-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color .3s;
+    }
+    .clip-recv-box.has-content { border-color: rgba(79,142,247,.35); }
+
+    .clip-recv-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .clip-recv-title {
+      font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .clip-live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--muted);
+      transition: background .3s;
+    }
+    .clip-live-dot.active { background: var(--success); animation: pulse 1.5s infinite; }
+    .clip-recv-actions { display: flex; gap: 8px; }
+
+    .btn-copy-clip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); padding: 6px 14px; border-radius: 7px;
+      font-family: var(--sans); font-size: 0.82rem;
+      cursor: pointer; transition: all .18s;
+    }
+    .btn-copy-clip:hover { border-color: var(--accent); color: var(--accent); background: rgba(79,142,247,.08); }
+    .btn-copy-clip.copied { border-color: var(--success); color: var(--success); }
+
+    #clipReceived {
+      padding: 16px 18px;
+      font-size: 0.93rem; line-height: 1.7;
+      white-space: pre-wrap; word-break: break-word;
+      min-height: 80px; max-height: 360px; overflow-y: auto;
+      color: var(--text);
+    }
+    #clipReceived.empty { color: var(--muted); font-style: italic; }
+
+    .clip-recv-footer {
+      padding: 8px 18px;
+      font-size: 0.74rem; color: var(--muted); font-family: var(--mono);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .clip-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .clip-text {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      white-space: pre-wrap;
+    }
+    
+    .clip-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .qr-fab {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 999;
+    
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-size: 1.3rem;
+    
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+    
+    .qr-fab:active {
+      transform: scale(0.95);
+    }
+    
+    .qr-fab { display: none; }
+    
+    .qr-fab img {
+      width: 22px;
+      height: 22px;
+      pointer-events: none; /* prevents weird click issues */
+    }
+    
+    @media (max-width: 480px) {
+      .qr-fab { display: block; }
+    }
+
+    /* update flash animation */
+    @keyframes flashBorder {
+      0%   { border-color: var(--accent); }
+      100% { border-color: rgba(79,142,247,.35); }
+    }
+    .clip-recv-box.flash { animation: flashBorder .6s ease; }
+
+    /* ── QR modal ── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,.7);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none;
-      transition: opacity .25s;
+      opacity: 0; pointer-events: none; transition: opacity .25s;
     }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
     .modal {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 32px;
-      max-width: 340px;
-      width: 90%;
-      text-align: center;
-      transform: translateY(12px);
-      transition: transform .25s;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 32px;
+      max-width: 340px; width: 90%; text-align: center;
+      transform: translateY(12px); transition: transform .25s;
     }
     .modal-overlay.open .modal { transform: translateY(0); }
-    .modal h2 {
-      font-family: var(--mono);
-      font-size: 1rem;
-      margin-bottom: 6px;
-    }
+    .modal h2 { font-family: var(--mono); font-size: 1rem; margin-bottom: 6px; }
     .modal p { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
     #qrContainer { margin: 0 auto 20px; }
     #qrContainer img { border-radius: 12px; max-width: 200px; }
     .modal-url {
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      color: var(--accent);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      word-break: break-all;
-      margin-bottom: 16px;
+      font-family: var(--mono); font-size: 0.78rem; color: var(--accent);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px; word-break: break-all; margin-bottom: 16px;
     }
     .btn-close {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 8px 20px;
-      font-family: var(--sans);
-      cursor: pointer;
-      transition: background .2s;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; padding: 8px 20px;
+      font-family: var(--sans); cursor: pointer; transition: background .2s;
     }
     .btn-close:hover { background: var(--border); }
 
-    /* ══════════════════════════════════════════
-       Responsive
-    ══════════════════════════════════════════ */
     @media (max-width: 480px) {
-      .drop-zone    { padding: 36px 16px; }
-      .drop-icon    { font-size: 2.2rem; }
+      .drop-zone { padding: 36px 16px; }
       .server-badge { display: none; }
-      .file-details { gap: 8px; }
+      .tab-btn span.tab-label { display: none; }
     }
+    
+    
   </style>
 </head>
 <body>
-
 <div class="app-wrap">
 
-  <!-- ── Header ── -->
+  <!-- Header -->
   <header>
     <div class="logo">
       <div class="logo-icon">📡</div>
@@ -422,35 +447,82 @@
     </div>
   </header>
 
-  <!-- ── Drop zone ── -->
-  <div class="drop-zone" id="dropZone">
-    <span class="drop-icon">⬆</span>
-    <div class="drop-title">Drop files here</div>
-    <div class="drop-sub">
-      or click to browse &nbsp;·&nbsp; max {{ max_mb }} MB per file
+  <!-- Tab bar -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('files', this)">
+      📁 <span class="tab-label">Files</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('clipboard', this)" id="clipTabBtn">
+      📋 <span class="tab-label">Clipboard</span>
+    </button>
+  </div>
+
+  <!-- ════════════ FILES TAB ════════════ -->
+  <div class="tab-panel active" id="tab-files">
+
+    <!-- Drop zone -->
+    <div class="drop-zone" id="dropZone">
+      <span class="drop-icon">⬆</span>
+      <div class="drop-title">Drop files here</div>
+      <div class="drop-sub">or click to browse &nbsp;·&nbsp; max {{ max_mb }} MB per file</div>
+      <!-- FIXED: plain <button> calls fileInput.click() directly — no label/event-capture bug -->
+      <button class="btn-pick" onclick="document.getElementById('fileInput').click(); event.stopPropagation();">
+        📂 Choose files
+      </button>
+      <input type="file" id="fileInput" multiple />
     </div>
-    <label for="fileInput" class="btn-pick">
-      📂 Choose files
-    </label>
-    <input type="file" id="fileInput" multiple />
-  </div>
 
-  <!-- ── Upload queue ── -->
-  <div id="uploadQueue"></div>
+    <!-- Upload queue -->
+    <div id="uploadQueue"></div>
 
-  <!-- ── File list ── -->
-  <div class="section-header">
-    <span class="section-title">Shared Files</span>
-    <span class="file-count-badge" id="fileCount">0 files</span>
-  </div>
-  <div id="fileList"></div>
+    <!-- File list -->
+    <div class="section-header">
+      <span class="section-title">Shared Files</span>
+      <span class="file-count-badge" id="fileCount">0 files</span>
+    </div>
+    <div id="fileList"></div>
+
+  </div><!-- /tab-files -->
+
+  <!-- ════════════ CLIPBOARD TAB ════════════ -->
+  <div class="tab-panel" id="tab-clipboard">
+    <div class="clipboard-layout">
+
+      <!-- Send box -->
+      <div class="clip-send-box">
+        <h3>✏️ Send text &nbsp;<span>→ other devices</span></h3>
+        <textarea id="clipInput" placeholder="Paste or type anything — a URL, a command, an address, a note…"></textarea>
+        <div class="clip-send-row">
+          <span class="clip-char-count" id="clipCharCount">0 chars</span>
+          <button class="btn-clip-clear" onclick="clearClipboard()">Clear all</button>
+          <button class="btn-clip-send" onclick="sendClipboard()">📤 Share</button>
+        </div>
+      </div>
+
+      <!-- Received box -->
+      <div class="clip-recv-box" id="clipRecvBox">
+        <div class="clip-recv-header">
+          <span class="clip-recv-title">
+            <span class="clip-live-dot" id="clipLiveDot"></span>
+            Live clipboard
+          </span>
+          <div class="clip-recv-actions">
+            <button class="btn-copy-clip" id="copyBtn" onclick="copyReceived()">⎘ Copy</button>
+          </div>
+        </div>
+        <div id="clipList"></div>
+        <div class="clip-recv-footer" id="clipUpdatedAt">—</div>
+      </div>
+
+    </div>
+  </div><!-- /tab-clipboard -->
 
 </div><!-- /app-wrap -->
 
-<!-- ── Toast container ── -->
+<!-- Toasts -->
 <div id="toast-container"></div>
 
-<!-- ── QR Modal ── -->
+<!-- QR Modal -->
 <div class="modal-overlay" id="qrModal" onclick="closeQR(event)">
   <div class="modal">
     <h2>📱 Scan to Connect</h2>
@@ -462,229 +534,279 @@
 </div>
 
 <script>
-/* ══════════════════════════════════════════════
-   State
-══════════════════════════════════════════════ */
-let files = [];
-
-/* ══════════════════════════════════════════════
-   Toast notifications
-══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════
+//  Utilities
+// ═══════════════════════════════════════════
 function toast(msg, type = 'info', duration = 3500) {
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
   setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(20px)';
+    el.style.opacity = '0'; el.style.transform = 'translateX(20px)';
     el.style.transition = 'all .3s';
     setTimeout(() => el.remove(), 300);
   }, duration);
 }
 
-/* ══════════════════════════════════════════════
-   File type icon
-══════════════════════════════════════════════ */
-const ICONS = {
-  image: '🖼️', video: '🎬', audio: '🎵',
-  pdf: '📄', archive: '📦', text: '📝', other: '📎'
-};
+// ═══════════════════════════════════════════
+//  Tab switching
+// ═══════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
 
-/* ══════════════════════════════════════════════
-   Render file list
-══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════
+//  File list
+// ═══════════════════════════════════════════
+const ICONS = { image:'🖼️', video:'🎬', audio:'🎵', pdf:'📄', archive:'📦', text:'📝', other:'📎' };
+
 function renderFiles(data) {
-  files = data;
-  const list = document.getElementById('fileList');
+  const list  = document.getElementById('fileList');
   const badge = document.getElementById('fileCount');
   badge.textContent = `${data.length} file${data.length !== 1 ? 's' : ''}`;
-
   if (!data.length) {
-    list.innerHTML = `
-      <div class="empty-state">
-        <span class="emoji">🗂️</span>
-        <p>No files uploaded yet.<br>Drop something above to get started.</p>
-      </div>`;
+    list.innerHTML = `<div class="empty-state"><span class="emoji">🗂️</span><p>No files uploaded yet.<br>Drop something above to get started.</p></div>`;
     return;
   }
-
   list.innerHTML = data.map(f => `
-    <div class="file-card" data-name="${f.name}">
+    <div class="file-card">
       <div class="file-icon ${f.kind}">${ICONS[f.kind] || '📎'}</div>
       <div class="file-meta">
         <div class="file-name" title="${f.name}">${f.name}</div>
-        <div class="file-details">
-          <span>${f.size_human}</span>
-          <span>${f.uploaded}</span>
-        </div>
+        <div class="file-details"><span>${f.size_human}</span><span>${f.uploaded}</span></div>
       </div>
       <div class="file-actions">
-        <a  class="btn-icon primary"
-            href="/download/${encodeURIComponent(f.name)}"
-            title="Download" download>⬇</a>
-        <button class="btn-icon danger"
-                onclick="deleteFile('${f.name}')"
-                title="Delete">🗑</button>
+        <a class="btn-icon primary" href="/download/${encodeURIComponent(f.name)}" title="Download" download>⬇</a>
+        <button class="btn-icon danger" onclick="deleteFile('${f.name.replace(/'/g,"\\'")}')">🗑</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-/* ══════════════════════════════════════════════
-   Load files
-══════════════════════════════════════════════ */
 async function loadFiles() {
   try {
     const r = await fetch('/api/files');
-    const data = await r.json();
-    renderFiles(data);
-  } catch(e) {
-    toast('Could not load file list.', 'error');
-  }
+    renderFiles(await r.json());
+  } catch(e) { /* silent */ }
 }
 
-/* ══════════════════════════════════════════════
-   Upload with XHR for progress tracking
-══════════════════════════════════════════════ */
+async function deleteFile(name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  const r = await fetch(`/api/delete/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  if (r.ok) { toast(`${name} deleted.`, 'warn'); loadFiles(); }
+  else       { toast('Could not delete file.', 'error'); }
+}
+
+// ═══════════════════════════════════════════
+//  Upload — XHR for real progress bar
+// ═══════════════════════════════════════════
 function uploadFiles(fileList) {
   if (!fileList || !fileList.length) return;
-
   const queue = document.getElementById('uploadQueue');
 
   Array.from(fileList).forEach(file => {
-    // Create queue item UI
+    const id   = 'u' + Math.random().toString(36).slice(2);
     const item = document.createElement('div');
     item.className = 'queue-item';
     item.innerHTML = `
       <div class="qi-header">
         <span class="qi-name">${file.name}</span>
-        <span class="qi-status" id="qs-${file.name.replace(/\W/g,'_')}">0%</span>
+        <span class="qi-status" id="qs-${id}">0%</span>
       </div>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="qp-${file.name.replace(/\W/g,'_')}"></div>
-      </div>`;
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="qp-${id}"></div></div>`;
     queue.prepend(item);
 
     const statusEl = item.querySelector('.qi-status');
     const fillEl   = item.querySelector('.progress-bar-fill');
-
     const fd = new FormData();
     fd.append('files', file);
-
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
 
-    // Progress
-    xhr.upload.onprogress = (e) => {
+    xhr.upload.onprogress = e => {
       if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        fillEl.style.width   = pct + '%';
+        const pct = Math.round(e.loaded / e.total * 100);
+        fillEl.style.width = pct + '%';
         statusEl.textContent = pct + '%';
       }
     };
-
-    // Done
     xhr.onload = () => {
       if (xhr.status === 200) {
-        fillEl.style.width      = '100%';
+        fillEl.style.width = '100%';
         fillEl.style.background = 'var(--success)';
-        statusEl.textContent    = 'Done ✓';
-        statusEl.className      = 'qi-status done';
+        statusEl.textContent = 'Done ✓';
+        statusEl.className = 'qi-status done';
         toast(`${file.name} uploaded!`, 'success');
         loadFiles();
         setTimeout(() => item.remove(), 2500);
       } else {
         let msg = 'Upload failed';
-        try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e) {}
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch(_) {}
         statusEl.textContent = 'Error ✗';
-        statusEl.className   = 'qi-status error';
+        statusEl.className = 'qi-status error';
         fillEl.style.background = 'var(--danger)';
         toast(msg, 'error');
         setTimeout(() => item.remove(), 4000);
       }
     };
-
     xhr.onerror = () => {
       statusEl.textContent = 'Network error';
-      statusEl.className   = 'qi-status error';
+      statusEl.className = 'qi-status error';
       toast('Network error uploading ' + file.name, 'error');
     };
-
     xhr.send(fd);
   });
-
-  // Reset input
   document.getElementById('fileInput').value = '';
 }
 
-/* ══════════════════════════════════════════════
-   Delete
-══════════════════════════════════════════════ */
-async function deleteFile(name) {
-  if (!confirm(`Delete "${name}"?`)) return;
-  try {
-    const r = await fetch(`/api/delete/${encodeURIComponent(name)}`, { method: 'DELETE' });
-    if (r.ok) {
-      toast(`${name} deleted.`, 'warn');
-      loadFiles();
-    } else {
-      toast('Could not delete file.', 'error');
-    }
-  } catch(e) {
-    toast('Network error.', 'error');
-  }
-}
-
-/* ══════════════════════════════════════════════
-   Drag & drop
-══════════════════════════════════════════════ */
+// ── Drag & Drop onto zone ──
 const dropZone = document.getElementById('dropZone');
-
-dropZone.addEventListener('dragover', e => {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
-['dragleave','dragend'].forEach(ev =>
-  dropZone.addEventListener(ev, () => dropZone.classList.remove('drag-over'))
-);
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('dragend',   ()  => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault();
   dropZone.classList.remove('drag-over');
   uploadFiles(e.dataTransfer.files);
 });
-document.getElementById('fileInput').addEventListener('change', e => {
-  uploadFiles(e.target.files);
+// ── File input change ──
+document.getElementById('fileInput').addEventListener('change', e => uploadFiles(e.target.files));
+
+// ═══════════════════════════════════════════
+//  Clipboard
+// ═══════════════════════════════════════════
+let lastClipTimestamp = 0;
+
+document.getElementById('clipInput').addEventListener('input', () => {
+  const len = document.getElementById('clipInput').value.length;
+  document.getElementById('clipCharCount').textContent = `${len.toLocaleString()} char${len !== 1 ? 's' : ''}`;
 });
 
-/* ══════════════════════════════════════════════
-   QR code modal
-══════════════════════════════════════════════ */
+async function sendClipboard() {
+  const text = document.getElementById('clipInput').value.trim();
+  if (!text) { toast('Nothing to share — type something first.', 'warn'); return; }
+  const r = await fetch('/api/clipboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  if (r.ok) {
+    toast('Text shared to clipboard ✓', 'success');
+    await pollClipboard(true);   // instant refresh
+  } else {
+    const d = await r.json().catch(() => ({}));
+    toast(d.error || 'Failed to share.', 'error');
+  }
+}
+
+async function clearClipboard() {
+  document.getElementById('clipInput').value = '';
+  document.getElementById('clipCharCount').textContent = '0 chars';
+  await fetch('/api/clipboard', { method: 'DELETE' });
+  renderClipboard({ text: '', updated: 0 });
+  toast('Clipboard cleared.', 'warn');
+}
+
+async function pollClipboard(force = false) {
+  try {
+    const r    = await fetch('/api/clipboard');
+    const data = await r.json();
+    let lastClipData = [];
+    if (force || JSON.stringify(data.items) !== JSON.stringify(lastClipData)) {
+      renderClipboard(data, !force && data.updated > lastClipTimestamp);
+      lastClipTimestamp = data.updated;
+    }
+  } catch(_) {}
+}
+
+function renderClipboard(data) {
+  const list = document.getElementById('clipList');
+
+  if (!data.items || data.items.length === 0) {
+    list.innerHTML = `<div class="empty">Nothing yet — send something.</div>`;
+    return;
+  }
+
+  list.innerHTML = data.items.map(item => {
+    const d = new Date(item.updated * 1000);
+    return `
+      <div class="clip-item">
+        <div class="clip-text">${escapeHtml(item.text)}</div>
+        <div class="clip-meta">
+          ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <button onclick="copyText('${encodeURIComponent(item.text)}')">⎘</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+async function copyReceived() {
+  const text = document.getElementById('clipReceived').textContent;
+  if (!text || document.getElementById('clipReceived').classList.contains('empty')) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    toast('Copied to clipboard!', 'success');
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+  } catch(_) {
+    // fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    toast('Copied!', 'success');
+  }
+}
+
+function escapeHtml(text) {
+  return text.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;',
+    '"': '&quot;', "'": '&#039;'
+  }[m]));
+}
+
+function copyText(encoded) {
+  const text = decodeURIComponent(encoded);
+  navigator.clipboard.writeText(text);
+  toast('Copied!', 'success');
+}
+
+// ═══════════════════════════════════════════
+//  QR code
+// ═══════════════════════════════════════════
 async function openQR() {
   try {
-    const r    = await fetch('/qr');
-    const data = await r.json();
-    const url  = data.url;
-
+    const r   = await fetch('/qr');
+    const { url } = await r.json();
     document.getElementById('qrUrl').textContent = url;
     document.getElementById('qrContainer').innerHTML =
-      `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=4f8ef7&bgcolor=1c2030&data=${encodeURIComponent(url)}" alt="QR Code" />`;
-
+      `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=4f8ef7&bgcolor=1c2030&data=${encodeURIComponent(url)}" alt="QR" />`;
     document.getElementById('qrModal').classList.add('open');
-  } catch(e) {
-    toast('Could not generate QR code.', 'error');
-  }
+  } catch(_) { toast('Could not generate QR code.', 'error'); }
 }
 function closeQR(e) {
   if (!e || e.target === document.getElementById('qrModal'))
     document.getElementById('qrModal').classList.remove('open');
 }
 
-/* ══════════════════════════════════════════════
-   Auto-refresh every 30 seconds
-══════════════════════════════════════════════ */
+// ═══════════════════════════════════════════
+//  Boot
+// ═══════════════════════════════════════════
 loadFiles();
 setInterval(loadFiles, 30000);
+
+pollClipboard();
+setInterval(pollClipboard, 4000);   // poll clipboard every 4 seconds
 </script>
+<button class="qr-fab" onclick="openQR()">
+    <img src="{{ url_for('static', filename='qr.svg') }}" alt="QR" />
+</button>
 </body>
 </html>

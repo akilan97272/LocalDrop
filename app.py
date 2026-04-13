@@ -8,6 +8,8 @@ import uuid
 import socket
 import mimetypes
 import secrets
+import json
+import time
 from datetime import datetime
 from pathlib import Path
 from functools import wraps
@@ -19,16 +21,16 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 # ──────────────────────────────────────────────────────────────────
-#  Configuration  (edit these values to customise LocalDrop)
+#  Configuration
 # ──────────────────────────────────────────────────────────────────
 
-UPLOAD_FOLDER     = Path(__file__).parent / "uploads"
-MAX_FILE_SIZE     = 500 * 1024 * 1024          # 500 MB
-APP_PASSWORD      = None                       # e.g. "mypassword"
-ALLOWED_EXTENSIONS = None                      # e.g. {"jpg","pdf","zip"}
-PORT              = int(os.environ.get("LOCALDROP_PORT", 5000))
+UPLOAD_FOLDER      = Path(__file__).parent / "uploads"
+CLIPBOARD_FILE     = Path(__file__).parent / ".clipboard"   # file-backed so all Gunicorn workers share it
+MAX_FILE_SIZE      = 500 * 1024 * 1024
+APP_PASSWORD       = None
+ALLOWED_EXTENSIONS = None
+PORT               = int(os.environ.get("LOCALDROP_PORT", 5000))
 
-# Persistent secret key — survives server restarts so sessions stay valid
 _KEY_FILE = Path(__file__).parent / ".secret_key"
 if _KEY_FILE.exists():
     SECRET_KEY = _KEY_FILE.read_bytes()
@@ -36,8 +38,6 @@ else:
     SECRET_KEY = secrets.token_bytes(32)
     _KEY_FILE.write_bytes(SECRET_KEY)
 
-# ──────────────────────────────────────────────────────────────────
-#  Flask app
 # ──────────────────────────────────────────────────────────────────
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
@@ -52,7 +52,6 @@ app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
 # ──────────────────────────────────────────────────────────────────
 
 def get_local_ip() -> str:
-    """Best-effort LAN IP — no packet is actually sent."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(0)
@@ -97,12 +96,12 @@ def file_info(path: Path) -> dict:
     mime, _ = mimetypes.guess_type(path.name)
     kind = "other"
     if mime:
-        if   mime.startswith("image"):                               kind = "image"
-        elif mime.startswith("video"):                               kind = "video"
-        elif mime.startswith("audio"):                               kind = "audio"
-        elif "pdf" in mime:                                          kind = "pdf"
+        if   mime.startswith("image"):                                kind = "image"
+        elif mime.startswith("video"):                                kind = "video"
+        elif mime.startswith("audio"):                                kind = "audio"
+        elif "pdf" in mime:                                           kind = "pdf"
         elif any(x in mime for x in ("zip","tar","gzip","rar","7z")): kind = "archive"
-        elif mime.startswith("text"):                                kind = "text"
+        elif mime.startswith("text"):                                 kind = "text"
     return {
         "name":       path.name,
         "size":       stat.st_size,
@@ -120,6 +119,44 @@ def list_files() -> list:
         [file_info(f) for f in folder.iterdir() if f.is_file()],
         key=lambda x: x["timestamp"], reverse=True
     )
+
+
+# ──────────────────────────────────────────────────────────────────
+#  Clipboard — file-backed so all Gunicorn workers read the same data
+# ──────────────────────────────────────────────────────────────────
+def clipboard_read() -> list:
+    try:
+        data = json.loads(CLIPBOARD_FILE.read_text(encoding="utf-8"))
+        if isinstance(data, list):
+            return data[::-1]  # latest first
+        return []
+    except Exception:
+        return []
+
+
+def clipboard_write(text: str) -> dict:
+    try:
+        data = json.loads(CLIPBOARD_FILE.read_text(encoding="utf-8"))
+        if not isinstance(data, list):
+            data = []
+    except Exception:
+        data = []
+
+    new_item = {"text": text, "updated": time.time()}
+    data.append(new_item)
+
+    # optional: limit history size (say last 20)
+    data = data[-20:]
+
+    CLIPBOARD_FILE.write_text(json.dumps(data), encoding="utf-8")
+    return new_item
+
+
+def clipboard_clear() -> None:
+    try:
+        CLIPBOARD_FILE.unlink()
+    except Exception:
+        pass
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -172,7 +209,7 @@ def index():
 
 
 # ──────────────────────────────────────────────────────────────────
-#  Routes — API
+#  Routes — Files API
 # ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/files")
@@ -186,7 +223,6 @@ def api_files():
 def api_upload():
     if "files" not in request.files:
         return jsonify({"error": "No files field in request"}), 400
-
     uploaded, errors = [], []
     for f in request.files.getlist("files"):
         if not f or not f.filename:
@@ -198,7 +234,6 @@ def api_upload():
         dest  = Path(app.config["UPLOAD_FOLDER"]) / fname
         f.save(str(dest))
         uploaded.append(file_info(dest))
-
     if not uploaded and errors:
         return jsonify({"error": "; ".join(errors)}), 400
     return jsonify({"uploaded": uploaded, "warnings": errors}), 200
@@ -216,7 +251,34 @@ def api_delete(filename):
 
 
 # ──────────────────────────────────────────────────────────────────
-#  Routes — file delivery & utilities
+#  Routes — Clipboard API
+# ──────────────────────────────────────────────────────────────────
+
+@app.route("/api/clipboard", methods=["GET"])
+def api_clipboard_get():
+    return jsonify({"items": clipboard_read()})
+
+
+@app.route("/api/clipboard", methods=["POST"])
+@login_required
+def api_clipboard_post():
+    body = request.get_json(silent=True) or {}
+    text = body.get("text", "")
+    if len(text) > 100_000:                     # 100 KB cap
+        return jsonify({"error": "Text too long (max 100 KB)"}), 400
+    data = clipboard_write(text)
+    return jsonify(data), 200
+
+
+@app.route("/api/clipboard", methods=["DELETE"])
+@login_required
+def api_clipboard_delete():
+    clipboard_clear()
+    return jsonify({"text": "", "updated": 0}), 200
+
+
+# ──────────────────────────────────────────────────────────────────
+#  Routes — File delivery & utilities
 # ──────────────────────────────────────────────────────────────────
 
 @app.route("/download/<filename>")
@@ -254,7 +316,7 @@ def not_found(_):
 
 
 # ──────────────────────────────────────────────────────────────────
-#  Dev entry point  |  Production: gunicorn -c gunicorn.conf.py wsgi:app
+#  Dev entry point
 # ──────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -264,7 +326,5 @@ if __name__ == "__main__":
     print("═" * 56)
     print(f"  Local   ▸  http://localhost:{PORT}")
     print(f"  Network ▸  http://{ip}:{PORT}")
-    print(f"  Max     ▸  {MAX_FILE_SIZE//(1024*1024)} MB per file")
-    print("  ⚠  For production use Gunicorn (see README)")
     print("═" * 56 + "\n")
     app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)

@@ -4,3 +4,5 @@ venv/*
 uploads/*
 .secret_key
 localdrop.service
+localdrop.pid
+.clipboard
