@@ -1,7 +1,7 @@
 # 📡 LocalDrop — Local Network File Sharing
 
 A lightweight Flask + Gunicorn server that lets any device on your Wi-Fi
-upload and download files through a plain browser.
+upload and download files through a browser — no apps, no setup.
 
 ## Quick Start
 
@@ -12,8 +12,8 @@ pip install -r requirements.txt
 chmod +x start.sh
 
 # Run
-./start.sh          # default port 5000
-./start.sh 8080     # custom port
+./start.sh                     # default port 5000 & no password
+./start.sh 8080 mypassword     # custom port & password
 ```
 
 ## Files
@@ -54,14 +54,14 @@ sudo systemctl enable --now localdrop
 ## Config (app.py)
 
 - `MAX_FILE_SIZE` — default 500 MB
-- `APP_PASSWORD` — set a string to enable login
+- `LOCALDROP_PASSWORD` — set via environment variable to enable login
 - `PORT` — default 5000, or set `LOCALDROP_PORT` env var
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
-| Connection refused | `ss -tlnp | grep 5000` must show `0.0.0.0` |
+| Connection refused | `ss -tlnp \| grep 5000` must show `0.0.0.0` |
 | Connection timeout | `sudo ufw allow 5000/tcp` |
-| 413 error | Raise `MAX_FILE_SIZE` in app.py + `timeout` in gunicorn.conf.py |
+| 413 error | Increase `MAX_FILE_SIZE` in `app.py` and `timeout` in `gunicorn.conf.py` |
 | Sessions lost on restart | `.secret_key` file must exist and not be deleted |

@@ -79,7 +79,7 @@ def on_starting(server):
     print("  📡  LocalDrop — Gunicorn WSGI server")
     print("═" * 58)
     print(f"  Local    ▸  http://localhost:{port}")
-    print(f"  Network  ▸  http://{lan_ip}:{port}   ← use this on phone")
+    print(f"  Network  ▸  http://{lan_ip}:{port}   ")
     print(f"  Workers  ▸  {workers} sync workers × {threads} threads")
     print(f"  Timeout  ▸  {timeout}s  |  Max upload: 500 MB")
     print("═" * 58 + "\n")

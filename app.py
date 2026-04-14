@@ -27,7 +27,7 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER      = Path(__file__).parent / "uploads"
 CLIPBOARD_FILE     = Path(__file__).parent / ".clipboard"   # file-backed so all Gunicorn workers share it
 MAX_FILE_SIZE      = 500 * 1024 * 1024
-APP_PASSWORD       = None
+APP_PASSWORD = os.environ.get("LOCALDROP_PASSWORD", None)
 ALLOWED_EXTENSIONS = None
 PORT               = int(os.environ.get("LOCALDROP_PORT", 5000))
 
