@@ -96,9 +96,9 @@ export LOCALDROP_MAX_MB="$TOTAL_SIZE"
 
 exec "$GUNICORN" \
     --bind        "0.0.0.0:$PORT" \
-    --workers     2 \
+    --workers     10 \
     --worker-class sync \
-    --threads     1 \
+    --threads     5 \
     --timeout     300 \
     --keep-alive  5 \
     --max-requests 1000 \

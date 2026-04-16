@@ -329,7 +329,62 @@
       border-top: 1px solid var(--border);
       background: var(--surface);
     }
-
+    
+    .clip-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .clip-text {
+      flex: 1;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+    
+    .clip-copy-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .clip-copy-btn img {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      transition: all 0.2s ease;
+    }
+    
+    /* ✨ hover */
+    .clip-copy-btn:hover {
+      border-color: var(--accent);
+      background: rgba(79,142,247,0.08);
+    }
+    
+    .clip-copy-btn:hover img {
+      opacity: 1;
+      filter: brightness(1.3);
+    }
+    
+    /* ✅ copied state */
+    .clip-copy-btn.copied {
+      border-color: var(--success);
+      background: rgba(62,207,142,0.08);
+    }
+    
+    .clip-copy-btn.copied img {
+      filter: hue-rotate(90deg);
+    }
+    
     /* update flash animation */
     @keyframes flashBorder {
       0%   { border-color: var(--accent); }
@@ -451,7 +506,7 @@
             Live clipboard
           </span>
           <div class="clip-recv-actions">
-            <button class="btn-copy-clip" id="copyBtn" onclick="copyReceived()">⎘ Copy</button>
+            
           </div>
         </div>
         <pre id="clipReceived" class="empty">Nothing shared yet — send text from another device.</pre>
@@ -717,7 +772,7 @@ async function clearClipboard() {
   document.getElementById('clipInput').value = '';
   document.getElementById('clipCharCount').textContent = '0 chars';
   await fetch('/api/clipboard', { method: 'DELETE' });
-  renderClipboard({ text: '', updated: 0 });
+  renderClipboardList([]);
   toast('Clipboard cleared.', 'warn');
 }
 
@@ -725,71 +780,61 @@ async function pollClipboard(force = false) {
   try {
     const r    = await fetch('/api/clipboard');
     const data = await r.json();
-    if (force || data.updated !== lastClipTimestamp) {
-      renderClipboard(data, !force && data.updated > lastClipTimestamp);
-      lastClipTimestamp = data.updated;
-    }
+    renderClipboardList(data.items || []);
   } catch(_) {}
 }
 
-function renderClipboard(data, flash = false) {
-  const pre      = document.getElementById('clipReceived');
-  const box      = document.getElementById('clipRecvBox');
-  const footer   = document.getElementById('clipUpdatedAt');
-  const liveDot  = document.getElementById('clipLiveDot');
-  const copyBtn  = document.getElementById('copyBtn');
+function renderClipboardList(items) {
+  const pre = document.getElementById('clipReceived');
+  const box = document.getElementById('clipRecvBox');
 
-  if (data.text) {
-    pre.textContent = data.text;
-    pre.classList.remove('empty');
-    box.classList.add('has-content');
-    liveDot.classList.add('active');
-    copyBtn.style.opacity = '1';
-    copyBtn.style.pointerEvents = 'auto';
-    const d = new Date(data.updated * 1000);
-    footer.textContent = 'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    // Brief flash animation to signal new content
-    if (flash) {
-      box.classList.remove('flash');
-      void box.offsetWidth;           // reflow to restart animation
-      box.classList.add('flash');
-      // also show tab indicator if not on clipboard tab
-      const tabBtn = document.getElementById('clipTabBtn');
-      if (!document.getElementById('tab-clipboard').classList.contains('active')) {
-        tabBtn.textContent = '📋 Clipboard 🔴';
-        setTimeout(() => { tabBtn.innerHTML = '📋 <span class="tab-label">Clipboard</span>'; }, 4000);
-      }
-    }
-  } else {
+  if (!items.length) {
     pre.textContent = 'Nothing shared yet — send text from another device.';
     pre.classList.add('empty');
     box.classList.remove('has-content');
-    liveDot.classList.remove('active');
-    copyBtn.style.opacity = '0.4';
-    copyBtn.style.pointerEvents = 'none';
-    footer.textContent = '—';
+    return;
   }
+
+  pre.classList.remove('empty');
+  box.classList.add('has-content');
+
+  pre.innerHTML = items.map(item => {
+    const time = new Date(item.updated * 1000)
+      .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    return `
+    <div class="clip-item">
+      <div class="clip-text">${item.text}</div>
+    
+      <button class="clip-copy-btn" onclick="copyItem(this)">
+        <img src="../static/copy.svg" alt="copy" />
+      </button>
+    </div>
+    `;
+  }).join('');
 }
 
-async function copyReceived() {
-  const text = document.getElementById('clipReceived').textContent;
-  if (!text || document.getElementById('clipReceived').classList.contains('empty')) return;
+async function copyItem(btn) {
+  const text = btn.parentElement.querySelector('.clip-text').innerText;
+
   try {
     await navigator.clipboard.writeText(text);
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = '✓ Copied!';
+
     btn.classList.add('copied');
-    toast('Copied to clipboard!', 'success');
-    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
-  } catch(_) {
-    // fallback for older browsers
+    toast('Copied!', 'success');
+
+    setTimeout(() => {
+      btn.classList.remove('copied');
+    }, 1500);
+
+  } catch {
     const ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
     ta.select();
     document.execCommand('copy');
     ta.remove();
+
     toast('Copied!', 'success');
   }
 }
