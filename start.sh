@@ -1,9 +1,39 @@
 #!/usr/bin/env bash
 # LocalDrop — start server
 # Usage:  ./start.sh [port] [password]  default port: 5000 & default password: None
+# ── defaults ──────────────────────────────────────────────────────
+PORT=5000
+PASSWORD=""
+TOTAL_SIZE=500
 
-PORT="${1:-5000}"
-PASSWORD="${2:-}"
+# ── parse flags ───────────────────────────────────────────────────
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --port|-p)
+            PORT="$2"
+            shift 2
+            ;;
+        --password|-P)
+            PASSWORD="$2"
+            shift 2
+            ;;
+        --size|-s)
+            TOTAL_SIZE="$2"
+            shift 2
+            ;;
+        -3)
+            PORT="$2"
+            TOTAL_SIZE="$3"
+            PASSWORD="$4"
+            shift 4
+            ;;
+        *)
+            echo "❌ Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
@@ -52,7 +82,7 @@ except: print('127.0.0.1')
 echo ""
 echo "  ┌─────────────────────────────────────────┐"
 echo "  │  Local   →  http://localhost:$PORT       │"
-echo "  │  Network →  http://$LAN_IP:$PORT    │"
+echo "  │  Network →  http://$LAN_IP:$PORT   │"
 echo "  │                                         │"
 echo "  │  Open the Network URL on your phone     │"
 echo "  │  Ctrl+C to stop                         │"
@@ -62,6 +92,7 @@ echo ""
 # ── launch ────────────────────────────────────────────────────────
 export LOCALDROP_PORT="$PORT"
 export LOCALDROP_PASSWORD="$PASSWORD"
+export LOCALDROP_MAX_MB="$TOTAL_SIZE"
 
 exec "$GUNICORN" \
     --bind        "0.0.0.0:$PORT" \

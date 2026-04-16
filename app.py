@@ -10,6 +10,7 @@ import mimetypes
 import secrets
 import json
 import time
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
 from functools import wraps
@@ -25,9 +26,9 @@ from werkzeug.utils import secure_filename
 # ──────────────────────────────────────────────────────────────────
 
 UPLOAD_FOLDER      = Path(__file__).parent / "uploads"
-CLIPBOARD_FILE     = Path(__file__).parent / ".clipboard"   # file-backed so all Gunicorn workers share it
-MAX_FILE_SIZE      = 500 * 1024 * 1024
-APP_PASSWORD = os.environ.get("LOCALDROP_PASSWORD", None)
+CLIPBOARD_FILE     = Path(__file__).parent / ".clipboard"
+MAX_FILE_SIZE      = int(os.environ.get("LOCALDROP_MAX_MB", 500)) * 1024 * 1024
+APP_PASSWORD       = os.environ.get("LOCALDROP_PASSWORD", None)
 ALLOWED_EXTENSIONS = None
 PORT               = int(os.environ.get("LOCALDROP_PORT", 5000))
 
@@ -43,8 +44,14 @@ UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-app.config["UPLOAD_FOLDER"]      = str(UPLOAD_FOLDER)
-app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
+app.config["UPLOAD_FOLDER"] = str(UPLOAD_FOLDER)
+
+# ─── DO NOT set MAX_CONTENT_LENGTH here ───────────────────────────
+# Flask/Werkzeug enforces it by checking the Content-Length *header*
+# before the route even runs, then abruptly closes the TCP connection
+# mid-transfer — the browser sees this as "network error".
+# We enforce the limit ourselves inside the streaming upload route.
+# ──────────────────────────────────────────────────────────────────
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -122,13 +129,14 @@ def list_files() -> list:
 
 
 # ──────────────────────────────────────────────────────────────────
-#  Clipboard — file-backed so all Gunicorn workers read the same data
+#  Clipboard — file-backed (all Gunicorn workers share it)
 # ──────────────────────────────────────────────────────────────────
+
 def clipboard_read() -> list:
     try:
         data = json.loads(CLIPBOARD_FILE.read_text(encoding="utf-8"))
         if isinstance(data, list):
-            return data[::-1]  # latest first
+            return data[::-1]
         return []
     except Exception:
         return []
@@ -141,13 +149,9 @@ def clipboard_write(text: str) -> dict:
             data = []
     except Exception:
         data = []
-
     new_item = {"text": text, "updated": time.time()}
     data.append(new_item)
-
-    # optional: limit history size (say last 20)
     data = data[-20:]
-
     CLIPBOARD_FILE.write_text(json.dumps(data), encoding="utf-8")
     return new_item
 
@@ -221,22 +225,68 @@ def api_files():
 @app.route("/api/upload", methods=["POST"])
 @login_required
 def api_upload():
-    if "files" not in request.files:
-        return jsonify({"error": "No files field in request"}), 400
-    uploaded, errors = [], []
-    for f in request.files.getlist("files"):
-        if not f or not f.filename:
-            continue
-        if not allowed_file(f.filename):
-            errors.append(f"{f.filename}: type not allowed")
-            continue
-        fname = unique_filename(f.filename)
-        dest  = Path(app.config["UPLOAD_FOLDER"]) / fname
-        f.save(str(dest))
-        uploaded.append(file_info(dest))
-    if not uploaded and errors:
-        return jsonify({"error": "; ".join(errors)}), 400
-    return jsonify({"uploaded": uploaded, "warnings": errors}), 200
+    """
+    Streaming binary upload — one file per request.
+
+    The JS sends:
+        POST /api/upload
+        Content-Type: application/octet-stream
+        X-Filename: <URL-encoded filename>
+
+    Why streaming instead of multipart FormData?
+    ─────────────────────────────────────────────
+    Multipart uploads route the file through two copies:
+      socket → Werkzeug temp file in /tmp → uploads/
+    If /tmp is small (tmpfs, RAM disk, low-space VPS) the temp write
+    fails mid-transfer and the browser sees a network error.
+
+    Streaming writes DIRECTLY from the socket to uploads/ in 256 KB
+    chunks, using O(1) memory regardless of file size.  No temp file,
+    no /tmp dependency, no double I/O.
+    """
+    # Decode filename from header (URL-encoded to support unicode names)
+    raw_name = request.headers.get("X-Filename", "upload")
+    try:
+        filename = urllib.parse.unquote(raw_name, encoding="utf-8")
+    except Exception:
+        filename = raw_name
+
+    if not filename:
+        return jsonify({"error": "No filename provided"}), 400
+
+    if not allowed_file(filename):
+        return jsonify({"error": f"{filename}: file type not allowed"}), 400
+
+    fname = unique_filename(filename)
+    dest  = Path(app.config["UPLOAD_FOLDER"]) / fname
+
+    written = 0
+    CHUNK   = 256 * 1024   # 256 KB read buffer — small enough to not hog RAM
+
+    try:
+        with open(dest, "wb") as out:
+            while True:
+                chunk = request.stream.read(CHUNK)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > MAX_FILE_SIZE:
+                    # Size exceeded — clean up partial file and reject
+                    out.close()
+                    dest.unlink(missing_ok=True)
+                    return jsonify({
+                        "error": f"File exceeds the {MAX_FILE_SIZE // (1024*1024)} MB limit"
+                    }), 413
+                out.write(chunk)
+    except OSError as e:
+        dest.unlink(missing_ok=True)
+        return jsonify({"error": f"Disk write failed: {e.strerror}"}), 500
+
+    if written == 0:
+        dest.unlink(missing_ok=True)
+        return jsonify({"error": "Received empty file"}), 400
+
+    return jsonify({"uploaded": [file_info(dest)], "warnings": []}), 200
 
 
 @app.route("/api/delete/<filename>", methods=["DELETE"])
@@ -264,10 +314,9 @@ def api_clipboard_get():
 def api_clipboard_post():
     body = request.get_json(silent=True) or {}
     text = body.get("text", "")
-    if len(text) > 100_000:                     # 100 KB cap
+    if len(text) > 100_000:
         return jsonify({"error": "Text too long (max 100 KB)"}), 400
-    data = clipboard_write(text)
-    return jsonify(data), 200
+    return jsonify(clipboard_write(text)), 200
 
 
 @app.route("/api/clipboard", methods=["DELETE"])
@@ -326,5 +375,6 @@ if __name__ == "__main__":
     print("═" * 56)
     print(f"  Local   ▸  http://localhost:{PORT}")
     print(f"  Network ▸  http://{ip}:{PORT}")
+    print(f"  Max     ▸  {MAX_FILE_SIZE//(1024*1024)} MB per file")
     print("═" * 56 + "\n")
     app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)

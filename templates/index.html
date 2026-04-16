@@ -329,107 +329,6 @@
       border-top: 1px solid var(--border);
       background: var(--surface);
     }
-    .clip-item {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 10px;
-    }
-    
-    .clip-text {
-      font-size: 0.9rem;
-      margin-bottom: 6px;
-      white-space: pre-wrap;
-    }
-    
-    .clip-meta {
-      font-size: 0.7rem;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-    }
-    .qr-fab {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      z-index: 999;
-    
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-    
-      border: none;
-      background: var(--accent);
-      color: white;
-      font-size: 1.3rem;
-    
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-      cursor: pointer;
-    }
-    
-    .qr-fab:active {
-      transform: scale(0.95);
-    }
-    
-    .qr-fab { display: none; }
-    
-    .qr-fab img {
-      width: 22px;
-      height: 22px;
-      pointer-events: none; /* prevents weird click issues */
-    }
-    
-    .copy-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    
-      width: 30px;
-      height: 30px;
-      border-radius: 6px;
-    
-      border: 1px solid var(--border);
-      background: var(--card);
-      cursor: pointer;
-    
-      transition: all 0.2s ease;
-    }
-    
-    .copy-btn img {
-      width: 16px;
-      height: 16px;
-      opacity: 0.8;
-      pointer-events: none;
-    }
-    
-    /* hover */
-    .copy-btn:hover {
-      border-color: var(--accent);
-      background: rgba(79,142,247,0.08);
-    }
-    
-    .copy-btn:hover img {
-      opacity: 1;
-    }
-    
-    /* click feedback */
-    .copy-btn:active {
-      transform: scale(0.92);
-    }
-    
-    /* success state (optional 🔥) */
-    .copy-btn.copied {
-      border-color: var(--success);
-    }
-    
-    .copy-btn.copied img {
-      filter: brightness(1.5);
-    }
-    
-    @media (max-width: 480px) {
-      .qr-fab { display: block; }
-    }
 
     /* update flash animation */
     @keyframes flashBorder {
@@ -474,8 +373,6 @@
       .server-badge { display: none; }
       .tab-btn span.tab-label { display: none; }
     }
-    
-    
   </style>
 </head>
 <body>
@@ -553,11 +450,11 @@
             <span class="clip-live-dot" id="clipLiveDot"></span>
             Live clipboard
           </span>
-          <!--<div class="clip-recv-actions">
+          <div class="clip-recv-actions">
             <button class="btn-copy-clip" id="copyBtn" onclick="copyReceived()">⎘ Copy</button>
-          </div>-->
+          </div>
         </div>
-        <div id="clipList"></div>
+        <pre id="clipReceived" class="empty">Nothing shared yet — send text from another device.</pre>
         <div class="clip-recv-footer" id="clipUpdatedAt">—</div>
       </div>
 
@@ -648,13 +545,40 @@ async function deleteFile(name) {
 }
 
 // ═══════════════════════════════════════════
-//  Upload — XHR for real progress bar
+//  Upload — streaming binary (one file per XHR)
+//
+//  WHY NOT FormData/multipart?
+//  Multipart routes the file: socket → /tmp → uploads/
+//  If /tmp is small (tmpfs, low-space VPS) the temp write fails and
+//  the server resets the connection mid-transfer = "network error".
+//
+//  Streaming sends the raw File bytes directly:
+//  socket → uploads/  (one write, no temp file, O(1) memory)
+//
+//  Progress events still work — the browser tracks bytes sent exactly
+//  the same way as with FormData.
 // ═══════════════════════════════════════════
+
+// Track active upload count so we can pause background polls
+let _activeUploads = 0;
+
+// Sequential queue — upload files one at a time to avoid saturating
+// the connection and to keep the progress display readable.
+let _uploadQueue = Promise.resolve();
+
 function uploadFiles(fileList) {
   if (!fileList || !fileList.length) return;
-  const queue = document.getElementById('uploadQueue');
+  const queueEl = document.getElementById('uploadQueue');
 
   Array.from(fileList).forEach(file => {
+    // Chain each upload onto the previous one (sequential, not parallel)
+    _uploadQueue = _uploadQueue.then(() => uploadOne(file, queueEl));
+  });
+  document.getElementById('fileInput').value = '';
+}
+
+function uploadOne(file, queueEl) {
+  return new Promise(resolve => {
     const id   = 'u' + Math.random().toString(36).slice(2);
     const item = document.createElement('div');
     item.className = 'queue-item';
@@ -664,49 +588,89 @@ function uploadFiles(fileList) {
         <span class="qi-status" id="qs-${id}">0%</span>
       </div>
       <div class="progress-bar-bg"><div class="progress-bar-fill" id="qp-${id}"></div></div>`;
-    queue.prepend(item);
+    queueEl.prepend(item);
 
     const statusEl = item.querySelector('.qi-status');
     const fillEl   = item.querySelector('.progress-bar-fill');
-    const fd = new FormData();
-    fd.append('files', file);
+
+    // Pause background polls while uploading so they don't compete
+    // for the Gunicorn worker and slow down the transfer.
+    _activeUploads++;
+
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
 
+    // Streaming binary upload — no FormData, no multipart overhead
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    xhr.setRequestHeader('X-Filename', encodeURIComponent(file.name));
+
+    // Generous timeout: 30 minutes handles even very slow WiFi
+    // (500 MB ÷ ~280 KB/s real-world slow 2.4 GHz = ~30 min)
+    xhr.timeout = 30 * 60 * 1000;
+
     xhr.upload.onprogress = e => {
       if (e.lengthComputable) {
-        const pct = Math.round(e.loaded / e.total * 100);
-        fillEl.style.width = pct + '%';
-        statusEl.textContent = pct + '%';
+        const pct  = Math.round(e.loaded / e.total * 100);
+        const sent = _humanSize(e.loaded);
+        const tot  = _humanSize(e.total);
+        fillEl.style.width   = pct + '%';
+        statusEl.textContent = `${pct}% · ${sent} / ${tot}`;
       }
     };
+
+    const finish = () => {
+      _activeUploads = Math.max(0, _activeUploads - 1);
+      resolve();
+    };
+
     xhr.onload = () => {
       if (xhr.status === 200) {
-        fillEl.style.width = '100%';
+        fillEl.style.width      = '100%';
         fillEl.style.background = 'var(--success)';
-        statusEl.textContent = 'Done ✓';
-        statusEl.className = 'qi-status done';
+        statusEl.textContent    = 'Done ✓';
+        statusEl.className      = 'qi-status done';
         toast(`${file.name} uploaded!`, 'success');
         loadFiles();
         setTimeout(() => item.remove(), 2500);
       } else {
         let msg = 'Upload failed';
         try { msg = JSON.parse(xhr.responseText).error || msg; } catch(_) {}
-        statusEl.textContent = 'Error ✗';
-        statusEl.className = 'qi-status error';
+        statusEl.textContent    = 'Error ✗';
+        statusEl.className      = 'qi-status error';
         fillEl.style.background = 'var(--danger)';
         toast(msg, 'error');
         setTimeout(() => item.remove(), 4000);
       }
+      finish();
     };
+
+    xhr.ontimeout = () => {
+      statusEl.textContent    = 'Timed out';
+      statusEl.className      = 'qi-status error';
+      fillEl.style.background = 'var(--danger)';
+      toast(`${file.name}: upload timed out (30 min limit)`, 'error');
+      finish();
+    };
+
     xhr.onerror = () => {
-      statusEl.textContent = 'Network error';
-      statusEl.className = 'qi-status error';
-      toast('Network error uploading ' + file.name, 'error');
+      statusEl.textContent    = 'Network error';
+      statusEl.className      = 'qi-status error';
+      fillEl.style.background = 'var(--danger)';
+      toast(`Network error uploading ${file.name}`, 'error');
+      finish();
     };
-    xhr.send(fd);
+
+    // Send File object directly — browser streams raw bytes, no FormData wrapper
+    xhr.send(file);
   });
-  document.getElementById('fileInput').value = '';
+}
+
+// Human-readable size for progress display
+function _humanSize(bytes) {
+  const units = ['B','KB','MB','GB'];
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) { bytes /= 1024; i++; }
+  return `${bytes.toFixed(1)} ${units[i]}`;
 }
 
 // ── Drag & Drop onto zone ──
@@ -761,37 +725,53 @@ async function pollClipboard(force = false) {
   try {
     const r    = await fetch('/api/clipboard');
     const data = await r.json();
-    let lastClipData = [];
-    if (force || JSON.stringify(data.items) !== JSON.stringify(lastClipData)) {
+    if (force || data.updated !== lastClipTimestamp) {
       renderClipboard(data, !force && data.updated > lastClipTimestamp);
       lastClipTimestamp = data.updated;
     }
   } catch(_) {}
 }
 
-function renderClipboard(data) {
-  const list = document.getElementById('clipList');
+function renderClipboard(data, flash = false) {
+  const pre      = document.getElementById('clipReceived');
+  const box      = document.getElementById('clipRecvBox');
+  const footer   = document.getElementById('clipUpdatedAt');
+  const liveDot  = document.getElementById('clipLiveDot');
+  const copyBtn  = document.getElementById('copyBtn');
 
-  if (!data.items || data.items.length === 0) {
-    list.innerHTML = `<div class="empty">Nothing yet — send something.</div>`;
-    return;
+  if (data.text) {
+    pre.textContent = data.text;
+    pre.classList.remove('empty');
+    box.classList.add('has-content');
+    liveDot.classList.add('active');
+    copyBtn.style.opacity = '1';
+    copyBtn.style.pointerEvents = 'auto';
+    const d = new Date(data.updated * 1000);
+    footer.textContent = 'Updated ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Brief flash animation to signal new content
+    if (flash) {
+      box.classList.remove('flash');
+      void box.offsetWidth;           // reflow to restart animation
+      box.classList.add('flash');
+      // also show tab indicator if not on clipboard tab
+      const tabBtn = document.getElementById('clipTabBtn');
+      if (!document.getElementById('tab-clipboard').classList.contains('active')) {
+        tabBtn.textContent = '📋 Clipboard 🔴';
+        setTimeout(() => { tabBtn.innerHTML = '📋 <span class="tab-label">Clipboard</span>'; }, 4000);
+      }
+    }
+  } else {
+    pre.textContent = 'Nothing shared yet — send text from another device.';
+    pre.classList.add('empty');
+    box.classList.remove('has-content');
+    liveDot.classList.remove('active');
+    copyBtn.style.opacity = '0.4';
+    copyBtn.style.pointerEvents = 'none';
+    footer.textContent = '—';
   }
-
-  list.innerHTML = data.items.map(item => {
-    const d = new Date(item.updated * 1000);
-    return `
-      <div class="clip-item">
-        <div class="clip-text">${escapeHtml(item.text)}</div>
-        <div class="clip-meta">
-          ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          <button class="copy-btn" onclick="copyText('${encodeURIComponent(item.text)}')">
-            <img src="{{ url_for('static', filename='copy.svg') }}" alt="copy" />
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
 }
+
 async function copyReceived() {
   const text = document.getElementById('clipReceived').textContent;
   if (!text || document.getElementById('clipReceived').classList.contains('empty')) return;
@@ -801,7 +781,7 @@ async function copyReceived() {
     btn.textContent = '✓ Copied!';
     btn.classList.add('copied');
     toast('Copied to clipboard!', 'success');
-    setTimeout(() => { btn.textContent = ''; btn.classList.remove('copied'); }, 2000);
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
   } catch(_) {
     // fallback for older browsers
     const ta = document.createElement('textarea');
@@ -812,31 +792,6 @@ async function copyReceived() {
     ta.remove();
     toast('Copied!', 'success');
   }
-}
-
-function escapeHtml(text) {
-  return text.replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;',
-    '"': '&quot;', "'": '&#039;'
-  }[m]));
-}
-
-function copyText(encoded) {
-  const text = decodeURIComponent(encoded);
-
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text);
-  } else {
-    // fallback
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-  }
-
-  toast('Copied!', 'success');
 }
 
 // ═══════════════════════════════════════════
@@ -864,10 +819,9 @@ loadFiles();
 setInterval(loadFiles, 30000);
 
 pollClipboard();
-setInterval(pollClipboard, 4000);   // poll clipboard every 4 seconds
+// Pause clipboard polling while an upload is in progress so the busy
+// Gunicorn worker isn't also handling poll requests mid-transfer.
+setInterval(() => { if (_activeUploads === 0) pollClipboard(); }, 4000);
 </script>
-<button class="qr-fab" onclick="openQR()">
-    <img src="{{ url_for('static', filename='qr.svg') }}" alt="QR" />
-</button>
 </body>
 </html>

@@ -1,7 +1,16 @@
 # 📡 LocalDrop — Local Network File Sharing
 
+Drop a file → open URL on another device → download instantly.
+
 A lightweight Flask + Gunicorn server that lets any device on your Wi-Fi
 upload and download files through a browser — no apps, no setup.
+
+## Features
+
+- ⚡ Streaming uploads (no temp files, no RAM spikes)
+- 📱 Works on any device with a browser
+- 🔒 Optional password protection
+- 🌐 Local network only (fast & private)
 
 ## Quick Start
 
@@ -10,10 +19,26 @@ upload and download files through a browser — no apps, no setup.
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 chmod +x start.sh
+```
+## Examples
 
-# Run
-./start.sh                     # default port 5000 & no password
-./start.sh 8080 mypassword     # custom port & password
+```bash
+# Run on port 9000
+./start.sh -p 9000
+
+# Allow large uploads (2GB)
+./start.sh -s 2000
+
+# Secure with password
+./start.sh -P mysecret
+
+# Full setup
+./start.sh -p 8080 -s 5000 -P mysecret
+
+# Custom Flags
+# -p -> Port
+# -s -> Max file size per upload (in MB)
+# -P -> Password
 ```
 
 ## Files
@@ -28,8 +53,8 @@ chmod +x start.sh
 
 ## Why Gunicorn?
 
-Flask's dev server binds to `127.0.0.1` by default — other devices can't reach it.
-Gunicorn binds to `0.0.0.0` and handles concurrent uploads properly.
+Flask's development server is not suitable for production and has limitations for large file uploads.
+Gunicorn binds to `0.0.0.0` and handles concurrent uploads more reliably.
 
 ## Firewall
 
@@ -63,5 +88,5 @@ sudo systemctl enable --now localdrop
 |---------|-----|
 | Connection refused | `ss -tlnp \| grep 5000` must show `0.0.0.0` |
 | Connection timeout | `sudo ufw allow 5000/tcp` |
-| 413 error | Increase `MAX_FILE_SIZE` in `app.py` and `timeout` in `gunicorn.conf.py` |
+| Upload fails / stops midway | Increase `-s` value or ensure enough disk space |
 | Sessions lost on restart | `.secret_key` file must exist and not be deleted |
