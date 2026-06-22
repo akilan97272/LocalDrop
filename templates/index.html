@@ -128,7 +128,10 @@
     .drop-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 20px; }
 
     /* FIX: button NOT a label, triggers input via JS — avoids event-capture bug */
-    #fileInput { display: none; }
+    #fileInput,
+    #folderInput {
+      display: none;
+    }
     .btn-pick {
       display: inline-flex; align-items: center; gap: 8px;
       background: var(--accent); color: #fff;
@@ -147,6 +150,61 @@
       border-radius: 10px; padding: 12px 16px;
       animation: slideIn .2s ease;
     }
+
+    /* ── Download progress overlay ── */
+    .dl-progress-wrap {
+      position: fixed; bottom: 80px; right: 24px; z-index: 900;
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .dl-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px; min-width: 280px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      pointer-events: all; animation: slideIn .2s ease;
+    }
+    .dl-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.82rem; }
+    .dl-name   { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+    .dl-meta   { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+    .dl-eta    { font-family: var(--mono); font-size: 0.72rem; color: var(--accent); }
+    
+    /* ── Upload speed/ETA ── */
+    .qi-metrics { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    
+    /* ── Folder tree view ── */
+    .file-tree { font-family: var(--mono); font-size: 0.82rem; margin-bottom: 28px; }
+    .tree-folder {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-bottom: 8px;
+    }
+    .tree-folder-header {
+      padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+      background: var(--surface); cursor: pointer; user-select: none;
+      font-weight: 500;
+    }
+    .tree-folder-header:hover { background: var(--border); }
+    .tree-folder-body { padding: 0 14px 8px 28px; }
+    .tree-file-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid rgba(37,42,58,.5);
+      gap: 8px;
+    }
+    .tree-file-row:last-child { border-bottom: none; }
+    .tree-file-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tree-file-size { color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
+    .tree-file-actions { display: flex; gap: 6px; }
+    
+    /* ── Toggle button for tree/list ── */
+    .view-toggle {
+      display: flex; gap: 4px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 8px; padding: 3px;
+    }
+    .view-toggle button {
+      padding: 4px 10px; border: none; border-radius: 6px;
+      background: transparent; color: var(--muted);
+      cursor: pointer; font-size: 0.8rem; transition: all .15s;
+    }
+    .view-toggle button.active { background: var(--card); color: var(--text); }
     @keyframes slideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
     .qi-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; }
     .qi-name { font-weight: 500; word-break: break-all; }
@@ -462,14 +520,20 @@
 
     <!-- Drop zone -->
     <div class="drop-zone" id="dropZone">
-      <span class="drop-icon">⬆</span>
-      <div class="drop-title">Drop files here</div>
-      <div class="drop-sub">or click to browse &nbsp;·&nbsp; max {{ max_mb }} MB per file</div>
-      <!-- FIXED: plain <button> calls fileInput.click() directly — no label/event-capture bug -->
-      <button class="btn-pick" onclick="document.getElementById('fileInput').click(); event.stopPropagation();">
-        📂 Choose files
-      </button>
-      <input type="file" id="fileInput" multiple />
+        <span class="drop-icon">⬆</span>
+        <div class="drop-title">Drop files or folders here</div>
+        <div class="drop-sub">or use the buttons below &nbsp;·&nbsp; max {{ max_mb }} MB per file</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn-pick" onclick="document.getElementById('fileInput').click(); event.stopPropagation();">
+            📂 Files
+            </button>
+            <button class="btn-pick" style="background:var(--accent2)"
+                    onclick="document.getElementById('folderInput').click(); event.stopPropagation();">
+            📁 Folder
+            </button>
+        </div>
+        <input type="file" id="fileInput" multiple />
+        <input type="file" id="folderInput" webkitdirectory multiple />
     </div>
 
     <!-- Upload queue -->
@@ -477,10 +541,17 @@
 
     <!-- File list -->
     <div class="section-header">
-      <span class="section-title">Shared Files</span>
-      <span class="file-count-badge" id="fileCount">0 files</span>
+        <span class="section-title">Shared Files</span>
+        <div style="display:flex;gap:12px;align-items:center">
+            <span class="file-count-badge" id="fileCount">0 files</span>
+            <div class="view-toggle">
+              <button id="btnViewList"  class="active" onclick="setView('list')">≡ List</button>
+              <button id="btnViewTree"  onclick="setView('tree')">⊞ Tree</button>
+            </div>
+        </div>
     </div>
     <div id="fileList"></div>
+    <div id="fileTree" style="display:none"></div>
 
   </div><!-- /tab-files -->
 
@@ -516,7 +587,8 @@
 
     </div>
   </div><!-- /tab-clipboard -->
-
+<!-- Download progress overlays -->
+<div class="dl-progress-wrap" id="dlProgressWrap"></div>
 </div><!-- /app-wrap -->
 
 <!-- Toasts -->
@@ -580,7 +652,7 @@ function renderFiles(data) {
         <div class="file-details"><span>${f.size_human}</span><span>${f.uploaded}</span></div>
       </div>
       <div class="file-actions">
-        <a class="btn-icon primary" href="/download/${encodeURIComponent(f.name)}" title="Download" download>⬇</a>
+        <button class="btn-icon primary" onclick="downloadWithProgress('${f.name.replace(/'/g,"\\'")}', ${f.size})" title="Download">⬇</button>
         <button class="btn-icon danger" onclick="deleteFile('${f.name.replace(/'/g,"\\'")}')">🗑</button>
       </div>
     </div>`).join('');
@@ -643,84 +715,101 @@ function uploadOne(file, queueEl) {
         <span class="qi-name">${file.name}</span>
         <span class="qi-status" id="qs-${id}">0%</span>
       </div>
-      <div class="progress-bar-bg"><div class="progress-bar-fill" id="qp-${id}"></div></div>`;
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="qp-${id}"></div></div>
+      <div class="qi-metrics" id="qm-${id}">—</div>`;
     queueEl.prepend(item);
 
-    const statusEl = item.querySelector('.qi-status');
-    const fillEl   = item.querySelector('.progress-bar-fill');
+    const statusEl  = item.querySelector('.qi-status');
+    const fillEl    = item.querySelector('.progress-bar-fill');
+    const metricsEl = item.querySelector('.qi-metrics');
 
-    // Pause background polls while uploading so they don't compete
-    // for the Gunicorn worker and slow down the transfer.
     _activeUploads++;
+    let startTime = Date.now();
+    let lastLoaded = 0, lastTime = Date.now();
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
-
-    // Streaming binary upload — no FormData, no multipart overhead
     xhr.setRequestHeader('Content-Type', 'application/octet-stream');
     xhr.setRequestHeader('X-Filename', encodeURIComponent(file.name));
-
-    // Generous timeout: 30 minutes handles even very slow WiFi
-    // (500 MB ÷ ~280 KB/s real-world slow 2.4 GHz = ~30 min)
     xhr.timeout = 30 * 60 * 1000;
 
     xhr.upload.onprogress = e => {
-      if (e.lengthComputable) {
-        const pct  = Math.round(e.loaded / e.total * 100);
-        const sent = _humanSize(e.loaded);
-        const tot  = _humanSize(e.total);
-        fillEl.style.width   = pct + '%';
-        statusEl.textContent = `${pct}% · ${sent} / ${tot}`;
+      if (!e.lengthComputable) return;
+
+      const now      = Date.now();
+      const pct      = Math.round(e.loaded / e.total * 100);
+      const elapsed  = (now - lastTime) / 1000;
+
+      // Instantaneous speed (smoothed over last interval)
+      let speed = 0;
+      if (elapsed > 0.2) {
+        speed     = (e.loaded - lastLoaded) / elapsed;   // bytes/s
+        lastLoaded = e.loaded;
+        lastTime   = now;
       }
+
+      const remaining  = e.total - e.loaded;
+      const etaSec     = speed > 0 ? remaining / speed : null;
+      const etaStr     = etaSec != null
+        ? etaSec > 3600  ? `${Math.floor(etaSec/3600)}h ${Math.floor((etaSec%3600)/60)}m`
+        : etaSec > 60    ? `${Math.floor(etaSec/60)}m ${Math.floor(etaSec%60)}s`
+        :                  `${Math.ceil(etaSec)}s`
+        : '…';
+
+      fillEl.style.width    = pct + '%';
+      statusEl.textContent  = `${pct}%`;
+      metricsEl.textContent = speed > 0
+        ? `${_humanSize(e.loaded)} / ${_humanSize(e.total)}  ·  ${_humanSize(speed)}/s  ·  ETA ${etaStr}`
+        : `${_humanSize(e.loaded)} / ${_humanSize(e.total)}`;
     };
 
-    const finish = () => {
-      _activeUploads = Math.max(0, _activeUploads - 1);
-      resolve();
-    };
+    const finish = () => { _activeUploads = Math.max(0, _activeUploads - 1); resolve(); };
 
     xhr.onload = () => {
       if (xhr.status === 200) {
-        fillEl.style.width      = '100%';
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        fillEl.style.width     = '100%';
         fillEl.style.background = 'var(--success)';
-        statusEl.textContent    = 'Done ✓';
-        statusEl.className      = 'qi-status done';
+        statusEl.textContent   = 'Done ✓';
+        statusEl.className     = 'qi-status done';
+        metricsEl.textContent  = `${_humanSize(file.size)} in ${elapsed}s · avg ${_humanSize(file.size / elapsed)}/s`;
         toast(`${file.name} uploaded!`, 'success');
         loadFiles();
-        setTimeout(() => item.remove(), 2500);
+        setTimeout(() => item.remove(), 3500);
       } else {
         let msg = 'Upload failed';
         try { msg = JSON.parse(xhr.responseText).error || msg; } catch(_) {}
+        // User-friendly messages for common errors
+        if (xhr.status === 413) msg = `File too large — max is {{ max_mb }} MB`;
+        if (xhr.status === 0)   msg = 'Connection lost — is the server still running?';
         statusEl.textContent    = 'Error ✗';
         statusEl.className      = 'qi-status error';
         fillEl.style.background = 'var(--danger)';
-        toast(msg, 'error');
-        setTimeout(() => item.remove(), 4000);
+        metricsEl.textContent   = msg;
+        toast(msg, 'error', 6000);
+        setTimeout(() => item.remove(), 6000);
       }
       finish();
     };
-
     xhr.ontimeout = () => {
       statusEl.textContent    = 'Timed out';
       statusEl.className      = 'qi-status error';
       fillEl.style.background = 'var(--danger)';
-      toast(`${file.name}: upload timed out (30 min limit)`, 'error');
+      metricsEl.textContent   = 'Upload exceeded 30 min limit';
+      toast(`${file.name}: upload timed out`, 'error');
       finish();
     };
-
     xhr.onerror = () => {
       statusEl.textContent    = 'Network error';
       statusEl.className      = 'qi-status error';
       fillEl.style.background = 'var(--danger)';
-      toast(`Network error uploading ${file.name}`, 'error');
+      metricsEl.textContent   = 'Connection lost — check Wi-Fi and server';
+      toast(`Network error uploading ${file.name}`, 'error', 6000);
       finish();
     };
-
-    // Send File object directly — browser streams raw bytes, no FormData wrapper
     xhr.send(file);
   });
 }
-
 // Human-readable size for progress display
 function _humanSize(bytes) {
   const units = ['B','KB','MB','GB'];
@@ -868,6 +957,8 @@ pollClipboard();
 // Pause clipboard polling while an upload is in progress so the busy
 // Gunicorn worker isn't also handling poll requests mid-transfer.
 setInterval(() => { if (_activeUploads === 0) pollClipboard(); }, 4000);
+
+
 </script>
 </body>
 </html>

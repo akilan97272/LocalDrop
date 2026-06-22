@@ -2,24 +2,17 @@
 LocalDrop — Local-network file sharing server.
 Compatible with both `python app.py` (dev) and Gunicorn (production).
 """
-
-import os
-import uuid
-import socket
-import mimetypes
-import secrets
-import json
-import time
-import urllib.parse
+import os, uuid, socket, mimetypes, secrets, json, time, logging, urllib.parse
 from datetime import datetime
 from pathlib import Path
 from functools import wraps
-
+from logging.handlers import RotatingFileHandler
 from flask import (
     Flask, request, jsonify, send_from_directory,
-    render_template, session, redirect, url_for,
+    render_template, session, redirect, url_for, Response,
 )
 from werkzeug.utils import secure_filename
+from werkzeug.http import parse_range_header
 
 # ──────────────────────────────────────────────────────────────────
 #  Configuration
@@ -31,6 +24,43 @@ MAX_FILE_SIZE      = int(os.environ.get("LOCALDROP_MAX_MB", 500)) * 1024 * 1024
 APP_PASSWORD       = os.environ.get("LOCALDROP_PASSWORD", None)
 ALLOWED_EXTENSIONS = None
 PORT               = int(os.environ.get("LOCALDROP_PORT", 5000))
+
+# ──────────────────────────────────────────────────────────────────
+#  Structured JSON logger
+#  All events (uploads, downloads, auth, errors) go to logs/app.log
+# ──────────────────────────────────────────────────────────────────
+_LOG_DIR = Path(__file__).parent / "logs"
+_LOG_DIR.mkdir(exist_ok=True)
+
+class _JsonFormatter(logging.Formatter):
+    """Emit one JSON object per log line — easy to grep / ship to ELK."""
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "ts":      datetime.utcnow().isoformat(timespec="seconds") + "Z",
+            "level":   record.levelname,
+            "event":   record.getMessage(),
+        }
+        # Merge any extra kwargs passed to logger.info("…", extra={…})
+        for k, v in record.__dict__.items():
+            if k not in ("msg","args","levelname","levelno","pathname",
+                         "filename","module","exc_info","exc_text",
+                         "stack_info","lineno","funcName","created",
+                         "msecs","relativeCreated","thread","threadName",
+                         "processName","process","name","message"):
+                payload[k] = v
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        return json.dumps(payload, default=str)
+
+_handler = logging.handlers.RotatingFileHandler(
+    _LOG_DIR / "app.log", maxBytes=5_000_000, backupCount=3
+)
+_handler.setFormatter(_JsonFormatter())
+
+log = logging.getLogger("localdrop")
+log.setLevel(logging.INFO)
+log.addHandler(_handler)
+log.addHandler(logging.StreamHandler())   # also print to terminal
 
 _KEY_FILE = Path(__file__).parent / ".secret_key"
 if _KEY_FILE.exists():
@@ -187,8 +217,10 @@ def login():
     error = None
     if request.method == "POST":
         if request.form.get("password") == APP_PASSWORD:
+            log.info("auth_success", extra={"ip": request.remote_addr})
             session["authenticated"] = True
             return redirect(url_for("index"))
+        log.warning("auth_failure", extra={"ip": request.remote_addr})
         error = "Incorrect password."
     return render_template("login.html", error=error)
 
@@ -279,13 +311,21 @@ def api_upload():
                     }), 413
                 out.write(chunk)
     except OSError as e:
-        dest.unlink(missing_ok=True)
-        return jsonify({"error": f"Disk write failed: {e.strerror}"}), 500
+            dest.unlink(missing_ok=True)
+            log.error("upload_disk_error", extra={
+                "file": fname, "error": e.strerror, "ip": request.remote_addr
+            })
+            return jsonify({"error": f"Disk write failed: {e.strerror}"}), 500
 
     if written == 0:
         dest.unlink(missing_ok=True)
         return jsonify({"error": "Received empty file"}), 400
 
+    log.info("upload_complete", extra={
+            "file":   fname,
+            "size":   written,
+            "ip":     request.remote_addr,
+        })
     return jsonify({"uploaded": [file_info(dest)], "warnings": []}), 200
 
 
@@ -297,6 +337,7 @@ def api_delete(filename):
     if not path.is_file():
         return jsonify({"error": "File not found"}), 404
     path.unlink()
+    log.info("file_deleted", extra={"file": safe, "ip": request.remote_addr})
     return jsonify({"deleted": safe}), 200
 
 
@@ -333,11 +374,81 @@ def api_clipboard_delete():
 @app.route("/download/<filename>")
 @login_required
 def download(filename):
-    return send_from_directory(
-        app.config["UPLOAD_FOLDER"],
-        secure_filename(filename),
-        as_attachment=True,
-    )
+    """
+    Resumable download via HTTP Range requests.
+
+    The browser (or curl/wget) can send:
+        Range: bytes=0-          → full file (normal)
+        Range: bytes=1048576-    → resume from 1 MB in
+
+    This lets an interrupted download continue without restarting.
+    send_from_directory doesn't support Range natively, so we stream
+    manually.  We send Accept-Ranges: bytes so browsers know they can.
+    """
+    safe  = secure_filename(filename)
+    path  = Path(app.config["UPLOAD_FOLDER"]) / safe
+
+    if not path.is_file():
+        log.warning("download_not_found", extra={"file": safe,
+                    "ip": request.remote_addr})
+        return jsonify({"error": "File not found"}), 404
+
+    size = path.stat().st_size
+
+    # ── Parse Range header ────────────────────────────────────────
+    range_header = request.headers.get("Range")
+    start, end   = 0, size - 1          # defaults: full file
+
+    if range_header:
+        parsed = parse_range_header(range_header)
+        if parsed and parsed.units == "bytes":
+            rng   = parsed.ranges[0]        # (start, stop) — stop is exclusive
+            start = rng[0] if rng[0] is not None else 0
+            end   = (rng[1] - 1) if rng[1] is not None else size - 1
+        start = max(0, start)
+        end   = min(end, size - 1)
+
+    length      = end - start + 1
+    is_partial  = (start != 0 or end != size - 1)
+    http_status = 206 if is_partial else 200
+
+    log.info("download_start", extra={
+        "file":    safe,
+        "size":    size,
+        "start":   start,
+        "end":     end,
+        "partial": is_partial,
+        "ip":      request.remote_addr,
+    })
+
+    CHUNK = 256 * 1024      # 256 KB chunks — good for streaming over WiFi
+
+    def stream_file():
+        remaining = length
+        with open(path, "rb") as fh:
+            fh.seek(start)
+            while remaining > 0:
+                data = fh.read(min(CHUNK, remaining))
+                if not data:
+                    break
+                remaining -= len(data)
+                yield data
+        log.info("download_complete", extra={"file": safe,
+                 "bytes_sent": length, "ip": request.remote_addr})
+
+    mime = mimetypes.guess_type(safe)[0] or "application/octet-stream"
+
+    headers = {
+        "Content-Disposition":  f'attachment; filename="{safe}"',
+        "Content-Type":         mime,
+        "Content-Length":       str(length),
+        "Accept-Ranges":        "bytes",
+        "Content-Range":        f"bytes {start}-{end}/{size}" if is_partial else f"bytes 0-{end}/{size}",
+        "Cache-Control":        "no-store",
+    }
+
+    return Response(stream_file(), status=http_status,
+                    headers=headers, direct_passthrough=True)
 
 
 @app.route("/qr")
