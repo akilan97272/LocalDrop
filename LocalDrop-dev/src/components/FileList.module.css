@@ -1,0 +1,246 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checkAll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.checkAll input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolBtn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: var(--glass-blur-sm);
+}
+
+.toolBtn:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--card-hover);
+}
+
+.toolBtn.danger {
+  color: var(--danger);
+  border-color: rgba(247, 95, 95, 0.25);
+}
+
+.toolBtn.danger:hover {
+  background: var(--danger-dim);
+  border-color: var(--danger);
+}
+
+.viewToggle {
+  display: flex;
+  gap: 3px;
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.viewToggle button {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+}
+
+.viewToggle button:hover {
+  color: var(--text);
+}
+
+.viewActive {
+  background: var(--card) !important;
+  color: var(--text) !important;
+}
+
+/* List view */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+  animation: slideIn 0.18s ease;
+}
+
+.row:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--card-hover);
+}
+
+.rowSelected {
+  border-color: var(--accent) !important;
+  background: var(--accent-dim) !important;
+}
+
+.checkbox {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.fileIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.fileName {
+  flex: 1;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileSize {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.fileActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-secondary);
+}
+
+.actionBtn:hover {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: var(--text);
+}
+
+.deleteBtn:hover {
+  background: var(--danger-dim);
+  border-color: rgba(247, 95, 95, 0.3);
+  color: var(--danger);
+}
+
+/* Empty state */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.emptyIcon {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+/* Tree view */
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.treeFolder {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  animation: slideIn 0.18s ease;
+}
+
+.treeFolderHeader {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--glass-bg-strong);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  font-size: 0.85rem;
+  transition: background var(--transition-fast);
+}
+
+.treeFolderHeader:hover {
+  background: var(--card-hover);
+}
+
+.treeFolderCount {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.treeFolderBody {
+  padding: 4px 14px 10px 28px;
+}
+
+.treeFileRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(79, 142, 247, 0.06);
+}
+
+.treeFileRow:last-child {
+  border-bottom: none;
+}
+
+.treeIcon { font-size: 0.9rem; }
+.treeFileName { flex: 1; font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.treeFileSize { font-size: 0.72rem; white-space: nowrap; }
+.treeFileActions { display: flex; gap: 4px; }

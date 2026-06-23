@@ -1,0 +1,37 @@
+/* ── Toasts ── */
+.toast {
+  padding: 11px 18px;
+  border-radius: var(--radius-md);
+  font-size: 0.86rem;
+  font-family: var(--sans);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg);
+  animation: toastIn 0.2s ease;
+  pointer-events: all;
+  max-width: 320px;
+}
+
+.toast-success {
+  background: rgba(62, 207, 142, 0.15);
+  border-color: rgba(62, 207, 142, 0.3);
+  color: var(--success);
+}
+
+.toast-error {
+  background: rgba(247, 95, 95, 0.15);
+  border-color: rgba(247, 95, 95, 0.3);
+  color: var(--danger);
+}
+
+.toast-warn {
+  background: rgba(247, 185, 85, 0.15);
+  border-color: rgba(247, 185, 85, 0.3);
+  color: var(--warn);
+}
+
+.toast-info {
+  background: var(--glass-bg-strong);
+  color: var(--text);
+}

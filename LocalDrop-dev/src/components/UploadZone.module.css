@@ -1,0 +1,125 @@
+.zone {
+  position: relative;
+  border: 2px dashed var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-sm);
+  margin-bottom: 24px;
+  transition: border-color var(--transition-base), background var(--transition-base);
+  cursor: default;
+}
+
+.zone:hover,
+.over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.icon {
+  display: block;
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 16px rgba(79, 142, 247, 0.5));
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-bottom: 20px;
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.pickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  position: relative;
+  z-index: 2;
+}
+
+.pickBtn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+/* Upload queue */
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.qItem {
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  animation: slideIn 0.2s ease;
+}
+
+.qHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.qName {
+  font-weight: 500;
+  word-break: break-all;
+  flex: 1;
+}
+
+.qStatus {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-left: 12px;
+}
+
+.qStatus.done  { color: var(--success); }
+.qStatus.error { color: var(--danger); }
+
+.barBg {
+  height: 4px;
+  background: var(--glass-border);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.metrics {
+  font-size: 0.72rem;
+  color: var(--muted);
+}

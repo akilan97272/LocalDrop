@@ -93,6 +93,7 @@ echo ""
 export LOCALDROP_PORT="$PORT"
 export LOCALDROP_PASSWORD="$PASSWORD"
 export LOCALDROP_MAX_MB="$TOTAL_SIZE"
+export LOCALDROP_API_URL="http://127.0.0.1:$PORT"
 
 exec "$GUNICORN" \
     --bind        "0.0.0.0:$PORT" \

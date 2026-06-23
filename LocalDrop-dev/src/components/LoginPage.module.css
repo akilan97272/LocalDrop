@@ -1,0 +1,118 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  border-radius: var(--radius-xl);
+  padding: 44px 36px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.icon {
+  display: block;
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+  filter: drop-shadow(0 0 20px rgba(79, 142, 247, 0.6));
+}
+
+.title {
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.title span {
+  color: var(--accent);
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 0.87rem;
+  margin-bottom: 28px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color var(--transition-base);
+  backdrop-filter: var(--glass-blur-sm);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.input::placeholder {
+  color: var(--muted);
+}
+
+.btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.84rem;
+  margin-top: 14px;
+  padding: 8px 12px;
+  background: var(--danger-dim);
+  border: 1px solid rgba(247, 95, 95, 0.25);
+  border-radius: var(--radius-sm);
+}

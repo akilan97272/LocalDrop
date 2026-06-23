@@ -6,3 +6,5 @@ uploads/*
 localdrop.service
 localdrop.pid
 .clipboard
+static/*
+logs/*

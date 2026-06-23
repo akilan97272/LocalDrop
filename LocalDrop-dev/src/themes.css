@@ -1,0 +1,112 @@
+/* ══════════════════════════════════════════════════
+   LocalDrop — Theme System
+   Add new themes by creating a [data-theme="name"] block.
+   The glassmorphism variables (--glass-*) drive the
+   frosted-panel aesthetic throughout the app.
+══════════════════════════════════════════════════ */
+
+/* ── Shared base (theme-independent) ── */
+:root {
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.22s ease;
+}
+
+/* ══════════════════════════════════════════════════
+   DARK THEME (default)
+══════════════════════════════════════════════════ */
+[data-theme="dark"],
+:root {
+  /* Background layers */
+  --bg:              #080b12;
+  --bg-grid:         rgba(79, 142, 247, 0.028);
+  --surface:         #0e1220;
+
+  /* Glassmorphism panels */
+  --glass-bg:        rgba(18, 24, 42, 0.62);
+  --glass-bg-strong: rgba(14, 20, 36, 0.80);
+  --glass-border:    rgba(79, 142, 247, 0.13);
+  --glass-border-hover: rgba(79, 142, 247, 0.32);
+  --glass-shadow:    0 8px 32px rgba(0, 0, 0, 0.45);
+  --glass-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55);
+  --glass-blur:      blur(18px);
+  --glass-blur-sm:   blur(10px);
+
+  /* Card / elevated surfaces */
+  --card:            rgba(22, 30, 55, 0.70);
+  --card-hover:      rgba(26, 36, 64, 0.80);
+  --card-border:     rgba(55, 70, 110, 0.40);
+
+  /* Accent palette */
+  --accent:          #4f8ef7;
+  --accent-dim:      rgba(79, 142, 247, 0.15);
+  --accent-hover:    #3a7de8;
+  --accent2:         #7c5cf7;
+  --accent2-dim:     rgba(124, 92, 247, 0.15);
+
+  /* Semantic */
+  --success:         #3ecf8e;
+  --success-dim:     rgba(62, 207, 142, 0.12);
+  --danger:          #f75f5f;
+  --danger-dim:      rgba(247, 95, 95, 0.12);
+  --warn:            #f7b955;
+  --warn-dim:        rgba(247, 185, 85, 0.12);
+
+  /* Typography */
+  --text:            #dde4f8;
+  --text-secondary:  #98a3c4;
+  --muted:           #5a6485;
+
+  /* Misc */
+  --scrollbar-thumb: rgba(79, 142, 247, 0.25);
+  --overlay:         rgba(0, 0, 0, 0.65);
+}
+
+/* ══════════════════════════════════════════════════
+   LIGHT THEME
+══════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:              #eef2fb;
+  --bg-grid:         rgba(79, 142, 247, 0.06);
+  --surface:         #e4eaf8;
+
+  --glass-bg:        rgba(255, 255, 255, 0.58);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border:    rgba(79, 142, 247, 0.18);
+  --glass-border-hover: rgba(79, 142, 247, 0.45);
+  --glass-shadow:    0 8px 32px rgba(80, 110, 200, 0.12);
+  --glass-shadow-lg: 0 20px 60px rgba(80, 110, 200, 0.18);
+  --glass-blur:      blur(18px);
+  --glass-blur-sm:   blur(10px);
+
+  --card:            rgba(255, 255, 255, 0.65);
+  --card-hover:      rgba(255, 255, 255, 0.80);
+  --card-border:     rgba(79, 142, 247, 0.18);
+
+  --accent:          #3a7de8;
+  --accent-dim:      rgba(58, 125, 232, 0.10);
+  --accent-hover:    #2568d4;
+  --accent2:         #6b48e8;
+  --accent2-dim:     rgba(107, 72, 232, 0.10);
+
+  --success:         #1eac6e;
+  --success-dim:     rgba(30, 172, 110, 0.10);
+  --danger:          #e04040;
+  --danger-dim:      rgba(224, 64, 64, 0.10);
+  --warn:            #d4900a;
+  --warn-dim:        rgba(212, 144, 10, 0.10);
+
+  --text:            #1a2240;
+  --text-secondary:  #4a5578;
+  --muted:           #8898bb;
+
+  --scrollbar-thumb: rgba(79, 142, 247, 0.30);
+  --overlay:         rgba(20, 30, 60, 0.50);
+}
