@@ -32,15 +32,17 @@ export default function LoginPage({ onSuccess }) {
         <p className={styles.sub}>Enter the password to access the file server.</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <input
-            type="password"
-            className={styles.input}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoFocus
-            autoComplete="current-password"
-          />
+          <div className={styles.inputWrap}>
+            <input
+              type="password"
+              className={styles.input}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoFocus
+              autoComplete="current-password"
+            />
+          </div>
           <button type="submit" className={styles.btn} disabled={loading}>
             {loading ? <span className={styles.spinner} /> : 'Unlock →'}
           </button>

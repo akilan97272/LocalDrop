@@ -1,100 +1,131 @@
 .wrap {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 1;
+  padding: 24px 16px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
 }
 
 .card {
   width: 100%;
-  max-width: 360px;
-  border-radius: var(--radius-xl);
-  padding: 44px 36px;
+  max-width: 380px;
+  border-radius: var(--radius-2xl);
+  padding: 48px 40px 40px;
   text-align: center;
-  animation: fadeIn 0.3s ease;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (max-width: 440px) {
+  .card {
+    padding: 40px 24px 32px;
+    border-radius: var(--radius-xl);
+    /* On small phones the card can fill width edge-to-edge */
+    max-width: 100%;
+  }
 }
 
 .icon {
   display: block;
-  font-size: 2.6rem;
-  margin-bottom: 14px;
-  filter: drop-shadow(0 0 20px rgba(79, 142, 247, 0.6));
+  font-size: 3rem;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 24px var(--accent-glow));
+  animation: fadeIn 0.5s ease 0.1s both;
 }
 
 .title {
   font-family: var(--mono);
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 6px;
   color: var(--text);
+  letter-spacing: -0.02em;
+  animation: fadeIn 0.5s ease 0.15s both;
 }
 
-.title span {
-  color: var(--accent);
-}
+.title span { color: var(--accent); }
 
 .sub {
-  color: var(--muted);
-  font-size: 0.87rem;
-  margin-bottom: 28px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 32px;
+  animation: fadeIn 0.5s ease 0.2s both;
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  animation: fadeIn 0.5s ease 0.25s both;
+}
+
+.inputWrap {
+  position: relative;
 }
 
 .input {
   width: 100%;
-  padding: 12px 16px;
-  background: var(--glass-bg);
+  padding: 14px 18px;
+  background: var(--glass-bg-deeper);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text);
   font-size: 1rem;
   font-family: var(--sans);
   outline: none;
-  transition: border-color var(--transition-base);
-  backdrop-filter: var(--glass-blur-sm);
+  transition: all var(--transition-base);
+  backdrop-filter: var(--glass-blur-xs);
+  -webkit-backdrop-filter: var(--glass-blur-xs);
+  /* iOS: prevent zoom on focus */
+  font-size: max(16px, 1rem);
 }
 
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--glass-bg);
+  box-shadow: 0 0 0 3px var(--accent-dim), inset 0 1px 0 var(--glass-border-top);
 }
 
-.input::placeholder {
-  color: var(--muted);
-}
+.input::placeholder { color: var(--muted); }
 
 .btn {
   width: 100%;
-  padding: 13px;
+  padding: 15px;
   background: var(--accent);
   border: none;
   border-radius: var(--radius-md);
   color: #fff;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   font-family: var(--sans);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  letter-spacing: -0.01em;
+  transition: all var(--transition-base);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
+  min-height: 50px;
+  box-shadow: 0 2px 8px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.20);
+  /* iOS tap highlight */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:hover:not(:disabled) {
   background: var(--accent-hover);
+  box-shadow: 0 4px 16px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25);
   transform: translateY(-1px);
 }
 
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 4px var(--accent-glow);
+}
+
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -111,8 +142,11 @@
   color: var(--danger);
   font-size: 0.84rem;
   margin-top: 14px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   background: var(--danger-dim);
-  border: 1px solid rgba(247, 95, 95, 0.25);
-  border-radius: var(--radius-sm);
+  border: 1px solid rgba(248, 113, 113, 0.20);
+  border-radius: var(--radius-md);
+  backdrop-filter: var(--glass-blur-xs);
+  -webkit-backdrop-filter: var(--glass-blur-xs);
+  animation: slideIn 0.2s ease;
 }

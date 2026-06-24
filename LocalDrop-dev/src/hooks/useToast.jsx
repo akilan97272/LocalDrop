@@ -18,8 +18,16 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={toast}>
       {children}
       <div style={{
-        position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
-        display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none',
+        position: 'fixed',
+        bottom: 'max(24px, env(safe-area-inset-bottom, 24px))',
+        right: '16px',
+        left: '16px',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 8,
+        pointerEvents: 'none',
       }}>
         {toasts.map((t) => (
           <div key={t.id} className={`toast toast-${t.type}`}>

@@ -3,7 +3,10 @@ import { downloadFile, deleteFile, deleteBulk, downloadBulk } from '../api/clien
 import { useToast } from '../hooks/useToast';
 import styles from './FileList.module.css';
 
-function humanSize(bytes) {
+function humanSize(file) {
+  // Prefer pre-formatted string from server, fall back to computing from bytes
+  if (file.size_human) return file.size_human;
+  let bytes = file.size;
   if (bytes == null) return '';
   const units = ['B', 'KB', 'MB', 'GB'];
   let i = 0;
@@ -225,8 +228,18 @@ function FileRow({ file, selected, onToggle, onDownload, onDelete }) {
         className={styles.checkbox}
       />
       <span className={styles.fileIcon}>{fileIcon(file.name)}</span>
-      <span className={styles.fileName}>{file.name}</span>
-      <span className={`${styles.fileSize} mono muted`}>{humanSize(file.size)}</span>
+      <span className={styles.fileName}>
+        {file.name}
+        {file.kind && file.kind !== 'other' && (
+          <span className={`${styles.kindBadge} ${styles[`kind_${file.kind}`]}`}>
+            {file.kind}
+          </span>
+        )}
+      </span>
+      <span className={`${styles.fileMeta} mono muted`}>
+        <span>{humanSize(file)}</span>
+        {file.uploaded && <span className={styles.uploadedDate}>{file.uploaded}</span>}
+      </span>
       <div className={styles.fileActions}>
         <button className={styles.actionBtn} onClick={onDownload} title="Download">⬇</button>
         <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={onDelete} title="Delete">🗑</button>
@@ -240,7 +253,7 @@ function TreeFileRow({ file, onDownload, onDelete }) {
     <div className={styles.treeFileRow}>
       <span className={styles.treeIcon}>{fileIcon(file.baseName)}</span>
       <span className={styles.treeFileName}>{file.baseName}</span>
-      <span className={`${styles.treeFileSize} muted`}>{humanSize(file.size)}</span>
+      <span className={`${styles.treeFileSize} muted`}>{humanSize(file)}</span>
       <div className={styles.treeFileActions}>
         <button className={styles.actionBtn} onClick={onDownload} title="Download">⬇</button>
         <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={onDelete} title="Delete">🗑</button>

@@ -1,112 +1,142 @@
 /* ══════════════════════════════════════════════════
-   LocalDrop — Theme System
+   LocalDrop — Theme System  (Apple-glass edition)
    Add new themes by creating a [data-theme="name"] block.
-   The glassmorphism variables (--glass-*) drive the
-   frosted-panel aesthetic throughout the app.
 ══════════════════════════════════════════════════ */
 
-/* ── Shared base (theme-independent) ── */
 :root {
   --mono: 'Space Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+          'DM Sans', 'Helvetica Neue', Arial, sans-serif;
 
-  --radius-sm:  8px;
-  --radius-md:  12px;
-  --radius-lg:  16px;
-  --radius-xl:  20px;
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  20px;
+  --radius-xl:  26px;
+  --radius-2xl: 32px;
 
-  --transition-fast: 0.15s ease;
-  --transition-base: 0.22s ease;
+  --transition-fast:   0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base:   0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ══════════════════════════════════════════════════
-   DARK THEME (default)
+   DARK THEME  — visionOS / macOS dark glass
 ══════════════════════════════════════════════════ */
 [data-theme="dark"],
 :root {
-  /* Background layers */
-  --bg:              #080b12;
-  --bg-grid:         rgba(79, 142, 247, 0.028);
-  --surface:         #0e1220;
+  /* ── Scene background ── */
+  --bg:            #06080f;
+  --bg-noise:      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 
-  /* Glassmorphism panels */
-  --glass-bg:        rgba(18, 24, 42, 0.62);
-  --glass-bg-strong: rgba(14, 20, 36, 0.80);
-  --glass-border:    rgba(79, 142, 247, 0.13);
-  --glass-border-hover: rgba(79, 142, 247, 0.32);
-  --glass-shadow:    0 8px 32px rgba(0, 0, 0, 0.45);
-  --glass-shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55);
-  --glass-blur:      blur(18px);
-  --glass-blur-sm:   blur(10px);
+  /* ── Glass panel layers ── */
+  /* Base glass — most panels */
+  --glass-bg:           rgba(255, 255, 255, 0.055);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.085);
+  --glass-bg-strong:    rgba(255, 255, 255, 0.09);
+  --glass-bg-deeper:    rgba(255, 255, 255, 0.038);
 
-  /* Card / elevated surfaces */
-  --card:            rgba(22, 30, 55, 0.70);
-  --card-hover:      rgba(26, 36, 64, 0.80);
-  --card-border:     rgba(55, 70, 110, 0.40);
+  /* Borders — thin specular highlight + subtle rim */
+  --glass-border:       rgba(255, 255, 255, 0.10);
+  --glass-border-hover: rgba(255, 255, 255, 0.22);
+  --glass-border-top:   rgba(255, 255, 255, 0.18); /* inner top highlight */
 
-  /* Accent palette */
-  --accent:          #4f8ef7;
-  --accent-dim:      rgba(79, 142, 247, 0.15);
-  --accent-hover:    #3a7de8;
-  --accent2:         #7c5cf7;
-  --accent2-dim:     rgba(124, 92, 247, 0.15);
+  /* Shadows — layered depth */
+  --glass-shadow:    0 2px 8px rgba(0,0,0,0.32), 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.10);
+  --glass-shadow-lg: 0 4px 16px rgba(0,0,0,0.40), 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+  --glass-shadow-xl: 0 8px 32px rgba(0,0,0,0.50), 0 40px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.14);
 
-  /* Semantic */
-  --success:         #3ecf8e;
-  --success-dim:     rgba(62, 207, 142, 0.12);
-  --danger:          #f75f5f;
-  --danger-dim:      rgba(247, 95, 95, 0.12);
-  --warn:            #f7b955;
-  --warn-dim:        rgba(247, 185, 85, 0.12);
+  /* Blur amounts */
+  --glass-blur:    saturate(180%) blur(28px);
+  --glass-blur-sm: saturate(160%) blur(16px);
+  --glass-blur-xs: saturate(140%) blur(8px);
 
-  /* Typography */
-  --text:            #dde4f8;
-  --text-secondary:  #98a3c4;
-  --muted:           #5a6485;
+  /* ── Card surfaces ── */
+  --card:        rgba(255, 255, 255, 0.06);
+  --card-hover:  rgba(255, 255, 255, 0.10);
+  --card-border: rgba(255, 255, 255, 0.10);
 
-  /* Misc */
-  --scrollbar-thumb: rgba(79, 142, 247, 0.25);
-  --overlay:         rgba(0, 0, 0, 0.65);
+  /* ── Accents ── */
+  --accent:       #4f8ef7;
+  --accent-dim:   rgba(79, 142, 247, 0.14);
+  --accent-hover: #6ba4ff;
+  --accent-glow:  rgba(79, 142, 247, 0.35);
+  --accent2:      #a78bfa;
+  --accent2-dim:  rgba(167, 139, 250, 0.14);
+
+  /* ── Semantic ── */
+  --success:     #34d399;
+  --success-dim: rgba(52, 211, 153, 0.12);
+  --danger:      #f87171;
+  --danger-dim:  rgba(248, 113, 113, 0.12);
+  --warn:        #fbbf24;
+  --warn-dim:    rgba(251, 191, 36, 0.12);
+
+  /* ── Typography ── */
+  --text:           rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --muted:          rgba(255, 255, 255, 0.30);
+
+  /* ── Misc ── */
+  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --overlay:         rgba(0, 0, 0, 0.72);
+  --divider:         rgba(255, 255, 255, 0.07);
+
+  /* ── Ambient orbs ── */
+  --orb1: rgba(79, 142, 247, 0.12);
+  --orb2: rgba(167, 139, 250, 0.09);
+  --orb3: rgba(52, 211, 153, 0.06);
 }
 
 /* ══════════════════════════════════════════════════
-   LIGHT THEME
+   LIGHT THEME  — macOS light / iOS frosted glass
 ══════════════════════════════════════════════════ */
 [data-theme="light"] {
-  --bg:              #eef2fb;
-  --bg-grid:         rgba(79, 142, 247, 0.06);
-  --surface:         #e4eaf8;
+  --bg:            #e8edf5;
 
-  --glass-bg:        rgba(255, 255, 255, 0.58);
-  --glass-bg-strong: rgba(255, 255, 255, 0.78);
-  --glass-border:    rgba(79, 142, 247, 0.18);
-  --glass-border-hover: rgba(79, 142, 247, 0.45);
-  --glass-shadow:    0 8px 32px rgba(80, 110, 200, 0.12);
-  --glass-shadow-lg: 0 20px 60px rgba(80, 110, 200, 0.18);
-  --glass-blur:      blur(18px);
-  --glass-blur-sm:   blur(10px);
+  --glass-bg:           rgba(255, 255, 255, 0.62);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.78);
+  --glass-bg-strong:    rgba(255, 255, 255, 0.76);
+  --glass-bg-deeper:    rgba(255, 255, 255, 0.44);
 
-  --card:            rgba(255, 255, 255, 0.65);
-  --card-hover:      rgba(255, 255, 255, 0.80);
-  --card-border:     rgba(79, 142, 247, 0.18);
+  --glass-border:       rgba(0, 0, 0, 0.07);
+  --glass-border-hover: rgba(0, 0, 0, 0.14);
+  --glass-border-top:   rgba(255, 255, 255, 0.90);
 
-  --accent:          #3a7de8;
-  --accent-dim:      rgba(58, 125, 232, 0.10);
-  --accent-hover:    #2568d4;
-  --accent2:         #6b48e8;
-  --accent2-dim:     rgba(107, 72, 232, 0.10);
+  --glass-shadow:    0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.90);
+  --glass-shadow-lg: 0 4px 16px rgba(0,0,0,0.10), 0 20px 60px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.95);
+  --glass-shadow-xl: 0 8px 32px rgba(0,0,0,0.14), 0 40px 80px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,1);
 
-  --success:         #1eac6e;
-  --success-dim:     rgba(30, 172, 110, 0.10);
-  --danger:          #e04040;
-  --danger-dim:      rgba(224, 64, 64, 0.10);
-  --warn:            #d4900a;
-  --warn-dim:        rgba(212, 144, 10, 0.10);
+  --glass-blur:    saturate(200%) blur(28px);
+  --glass-blur-sm: saturate(180%) blur(16px);
+  --glass-blur-xs: saturate(160%) blur(8px);
 
-  --text:            #1a2240;
-  --text-secondary:  #4a5578;
-  --muted:           #8898bb;
+  --card:        rgba(255, 255, 255, 0.70);
+  --card-hover:  rgba(255, 255, 255, 0.88);
+  --card-border: rgba(0, 0, 0, 0.06);
 
-  --scrollbar-thumb: rgba(79, 142, 247, 0.30);
-  --overlay:         rgba(20, 30, 60, 0.50);
+  --accent:       #2563eb;
+  --accent-dim:   rgba(37, 99, 235, 0.10);
+  --accent-hover: #1d4ed8;
+  --accent-glow:  rgba(37, 99, 235, 0.20);
+  --accent2:      #7c3aed;
+  --accent2-dim:  rgba(124, 58, 237, 0.10);
+
+  --success:     #059669;
+  --success-dim: rgba(5, 150, 105, 0.10);
+  --danger:      #dc2626;
+  --danger-dim:  rgba(220, 38, 38, 0.08);
+  --warn:        #d97706;
+  --warn-dim:    rgba(217, 119, 6, 0.10);
+
+  --text:           rgba(0, 0, 0, 0.85);
+  --text-secondary: rgba(0, 0, 0, 0.50);
+  --muted:          rgba(0, 0, 0, 0.30);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --overlay:         rgba(0, 0, 0, 0.40);
+  --divider:         rgba(0, 0, 0, 0.06);
+
+  --orb1: rgba(37, 99, 235, 0.08);
+  --orb2: rgba(124, 58, 237, 0.06);
+  --orb3: rgba(5, 150, 105, 0.05);
 }

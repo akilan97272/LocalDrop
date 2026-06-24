@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# LocalDrop — start server
-# Usage:  ./start.sh [port] [password]  default port: 5000 & default password: None
 # ── defaults ──────────────────────────────────────────────────────
 PORT=5000
 PASSWORD=""
@@ -9,28 +7,11 @@ TOTAL_SIZE=500
 # ── parse flags ───────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --port|-p)
-            PORT="$2"
-            shift 2
-            ;;
-        --password|-P)
-            PASSWORD="$2"
-            shift 2
-            ;;
-        --size|-s)
-            TOTAL_SIZE="$2"
-            shift 2
-            ;;
-        -3)
-            PORT="$2"
-            TOTAL_SIZE="$3"
-            PASSWORD="$4"
-            shift 4
-            ;;
-        *)
-            echo "❌ Unknown option: $1"
-            exit 1
-            ;;
+        --port|-p)      PORT="$2";      shift 2 ;;
+        --password|-P)  PASSWORD="$2";  shift 2 ;;
+        --size|-s)      TOTAL_SIZE="$2"; shift 2 ;;
+        -3)             PORT="$2"; TOTAL_SIZE="$3"; PASSWORD="$4"; shift 4 ;;
+        *) echo "❌ Unknown option: $1"; exit 1 ;;
     esac
 done
 
@@ -43,29 +24,55 @@ echo ""
 # ── dirs ──────────────────────────────────────────────────────────
 mkdir -p "$DIR/uploads" "$DIR/logs"
 
-# ── venv ──────────────────────────────────────────────────────────
+# ── Python venv ───────────────────────────────────────────────────
 if [ ! -d "$DIR/venv" ]; then
     echo "  [→] Creating virtualenv …"
-    python3 -m venv "$DIR/venv" || { echo "  [✗] python3-venv missing. Run: sudo apt install python3-venv"; exit 1; }
+    python3 -m venv "$DIR/venv" || {
+        echo "  [✗] python3-venv missing. Run: sudo apt install python3-venv"
+        exit 1
+    }
 fi
 
 PYTHON="$DIR/venv/bin/python3"
 PIP="$DIR/venv/bin/pip"
 GUNICORN="$DIR/venv/bin/gunicorn"
 
-# ── deps ──────────────────────────────────────────────────────────
-echo "  [→] Installing dependencies …"
-"$PIP" install --quiet flask werkzeug gunicorn
-echo "  [✓] Dependencies ready"
+# ── Python deps ───────────────────────────────────────────────────
+echo "  [→] Installing Python dependencies …"
+# fastapi + uvicorn[standard] replaces flask/werkzeug.
+# uvicorn[standard] includes uvloop + httptools for better performance.
+"$PIP" install --quiet fastapi "uvicorn[standard]" gunicorn
+echo "  [✓] Python dependencies ready"
 
-# ── secret key (created once, owned by current user) ──────────────
+# ── Frontend build ────────────────────────────────────────────────
+FRONTEND_DIR="$DIR/frontend"   # adjust if your Vite project is elsewhere
+STATIC_OUT="$DIR/static/react"
+
+if [ -d "$FRONTEND_DIR" ]; then
+    if [ ! -d "$STATIC_OUT" ] || [ "$FRONTEND_DIR/src" -nt "$STATIC_OUT/index.html" ] 2>/dev/null; then
+        echo "  [→] Building React frontend …"
+        cd "$FRONTEND_DIR"
+        # Pass env vars so vite.config.js bakes the correct API URL
+        LOCALDROP_PORT="$PORT" \
+        LOCALDROP_API_URL="http://127.0.0.1:$PORT" \
+        npm run build && echo "  [✓] Frontend built → $STATIC_OUT" || \
+            echo "  [!] Frontend build failed — serving API only"
+        cd "$DIR"
+    else
+        echo "  [✓] Frontend already built (static/react exists)"
+    fi
+else
+    echo "  [!] No frontend/ directory found — skipping build"
+fi
+
+# ── secret key ────────────────────────────────────────────────────
 SECRET_FILE="$DIR/.secret_key"
 if [ ! -f "$SECRET_FILE" ]; then
     "$PYTHON" -c "import secrets; open('$SECRET_FILE','wb').write(secrets.token_bytes(32))"
     echo "  [✓] Secret key created"
 fi
 
-# ── firewall (best-effort, never fatal) ───────────────────────────
+# ── firewall (best-effort) ────────────────────────────────────────
 if command -v ufw >/dev/null 2>&1; then
     sudo ufw allow "$PORT/tcp" >/dev/null 2>&1 && echo "  [✓] ufw: port $PORT open" || true
 fi
@@ -89,22 +96,21 @@ echo "  │  Ctrl+C to stop                         │"
 echo "  └─────────────────────────────────────────┘"
 echo ""
 
-# ── launch ────────────────────────────────────────────────────────
+# ── export env for FastAPI app ────────────────────────────────────
 export LOCALDROP_PORT="$PORT"
 export LOCALDROP_PASSWORD="$PASSWORD"
 export LOCALDROP_MAX_MB="$TOTAL_SIZE"
 export LOCALDROP_API_URL="http://127.0.0.1:$PORT"
 
+# ── launch ────────────────────────────────────────────────────────
+# worker_class is set in gunicorn_conf.py → uvicorn.workers.UvicornWorker
 exec "$GUNICORN" \
-    --bind        "0.0.0.0:$PORT" \
-    --workers     10 \
-    --worker-class sync \
-    --threads     5 \
-    --timeout     300 \
-    --keep-alive  5 \
-    --max-requests 1000 \
+    --bind         "0.0.0.0:$PORT" \
+    --timeout      1800 \
+    --keep-alive   10 \
     --access-logfile  "$DIR/logs/access.log" \
     --error-logfile   "$DIR/logs/error.log" \
-    --log-level   info \
-    --chdir       "$DIR" \
-    -c gunicorn.conf.py wsgi:app
+    --log-level    info \
+    --chdir        "$DIR" \
+    -c             "$DIR/gunicorn_conf.py" \
+    wsgi:app

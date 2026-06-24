@@ -1,37 +1,44 @@
-/* ── Toasts ── */
+/* ── Toasts — Apple-style notification pills ── */
 .toast {
-  padding: 11px 18px;
-  border-radius: var(--radius-md);
-  font-size: 0.86rem;
+  padding: 12px 18px;
+  border-radius: var(--radius-lg);
+  font-size: 0.84rem;
+  font-weight: 500;
   font-family: var(--sans);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: saturate(200%) blur(28px);
+  -webkit-backdrop-filter: saturate(200%) blur(28px);
   border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow-lg);
-  animation: toastIn 0.2s ease;
+  box-shadow: var(--glass-shadow-lg), inset 0 1px 0 var(--glass-border-top);
+  animation: toastIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: all;
-  max-width: 320px;
+  max-width: 300px;
+  letter-spacing: -0.01em;
 }
 
 .toast-success {
-  background: rgba(62, 207, 142, 0.15);
-  border-color: rgba(62, 207, 142, 0.3);
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.25);
   color: var(--success);
 }
 
 .toast-error {
-  background: rgba(247, 95, 95, 0.15);
-  border-color: rgba(247, 95, 95, 0.3);
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.25);
   color: var(--danger);
 }
 
 .toast-warn {
-  background: rgba(247, 185, 85, 0.15);
-  border-color: rgba(247, 185, 85, 0.3);
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.25);
   color: var(--warn);
 }
 
 .toast-info {
   background: var(--glass-bg-strong);
   color: var(--text);
+}
+
+/* Mobile: toasts go to bottom center */
+@media (max-width: 600px) {
+  .toast { max-width: calc(100vw - 32px); }
 }

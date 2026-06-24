@@ -1,12 +1,11 @@
 /* ══════════════════════════════════════════════════
-   LocalDrop — Global Styles
-   Import themes.css first, then this file.
+   LocalDrop — Global Styles  (Apple-glass edition)
 ══════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
 body {
   background: var(--bg);
@@ -15,60 +14,98 @@ body {
   font-size: 15px;
   line-height: 1.6;
   min-height: 100vh;
-  transition: background 0.3s, color 0.3s;
+  min-height: 100dvh;
+  transition: background 0.4s ease, color 0.4s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Grid background */
+/* ── Layered scene background ── */
+
+/* Layer 1: base gradient */
 body::before {
   content: '';
   position: fixed; inset: 0; z-index: 0;
-  background-image:
-    linear-gradient(var(--bg-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background:
+    radial-gradient(ellipse 80vw 60vh at 15% 10%,  var(--orb1) 0%, transparent 65%),
+    radial-gradient(ellipse 60vw 50vh at 85% 80%,  var(--orb2) 0%, transparent 65%),
+    radial-gradient(ellipse 40vw 40vh at 50% 50%,  var(--orb3) 0%, transparent 65%);
   pointer-events: none;
+  transition: opacity 0.4s ease;
 }
 
-/* Ambient glow blobs */
+/* Layer 2: subtle noise texture over everything */
 body::after {
   content: '';
   position: fixed; inset: 0; z-index: 0;
-  background:
-    radial-gradient(ellipse 600px 400px at 20% 20%, rgba(79,142,247,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 400px 300px at 80% 80%, rgba(124,92,247,0.05) 0%, transparent 70%);
+  background-image: var(--bg-noise, none);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.5;
   pointer-events: none;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 99px; }
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 99px;
+}
 
-/* Glass mixin helper class */
+/* ══════════════════════════════════════════════════
+   Glass utility classes
+   Apple-style: high saturation, thick blur, inner
+   top-edge specular highlight, layered shadows.
+══════════════════════════════════════════════════ */
+
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
+  /* Top highlight simulates light hitting the glass edge */
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-border-top);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow);
 }
 
 .glass-strong {
   background: var(--glass-bg-strong);
   border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg), inset 0 1px 0 var(--glass-border-top);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow-lg);
 }
 
-/* Typography utils */
-.mono { font-family: var(--mono); }
-.muted { color: var(--muted); }
+.glass-deeper {
+  background: var(--glass-bg-deeper);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-border-top);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+}
+
+/* ── Typography utils ── */
+.mono   { font-family: var(--mono); }
+.muted  { color: var(--muted); }
 .text-accent { color: var(--accent); }
 
-/* Animations */
+/* ── Touch target helper (iOS 44pt minimum) ── */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Keyframes ── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fadeIn {
@@ -76,13 +113,21 @@ body::after {
   to   { opacity: 1; }
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
 }
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+/* ── Mobile safe-area helpers ── */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-top    { padding-top:    env(safe-area-inset-top,    0px); }

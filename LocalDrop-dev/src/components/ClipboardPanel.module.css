@@ -1,49 +1,45 @@
 .sendBox {
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  margin-bottom: 24px;
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: slideUp 0.35s ease 0.1s both;
 }
 
 .sendHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.sendLabel {
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.charCount {
-  font-size: 0.75rem;
-}
+.sendLabel { font-weight: 600; font-size: 0.9rem; letter-spacing: -0.01em; }
+.charCount { font-size: 0.72rem; color: var(--muted); }
 
 .textarea {
   width: 100%;
-  padding: 12px 14px;
-  background: var(--glass-bg);
+  padding: 13px 15px;
+  background: var(--glass-bg-deeper);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text);
   font-family: var(--sans);
-  font-size: 0.9rem;
+  font-size: max(16px, 0.9rem);   /* iOS: no zoom */
   line-height: 1.6;
   resize: vertical;
   outline: none;
-  transition: border-color var(--transition-base);
-  backdrop-filter: var(--glass-blur-sm);
+  transition: all var(--transition-base);
+  backdrop-filter: var(--glass-blur-xs);
+  -webkit-backdrop-filter: var(--glass-blur-xs);
+  min-height: 120px;
 }
 
 .textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+  background: var(--glass-bg);
+  box-shadow: 0 0 0 3px var(--accent-dim), inset 0 1px 0 var(--glass-border-top);
 }
 
-.textarea::placeholder {
-  color: var(--muted);
-}
+.textarea::placeholder { color: var(--muted); }
 
 .sendActions {
   display: flex;
@@ -54,105 +50,116 @@
 }
 
 .clearBtn {
-  padding: 8px 16px;
+  padding: 9px 16px;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted);
+  border-radius: 99px;
+  background: var(--glass-bg-deeper);
+  color: var(--text-secondary);
   font-family: var(--sans);
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: inset 0 1px 0 var(--glass-border-top);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 38px;
 }
 
 .clearBtn:hover {
   color: var(--danger);
-  border-color: rgba(247, 95, 95, 0.35);
+  border-color: rgba(248,113,113,0.30);
   background: var(--danger-dim);
 }
 
+.clearBtn:active { transform: scale(0.96); }
+
 .sendBtn {
-  padding: 8px 20px;
+  padding: 9px 22px;
   background: var(--accent);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 99px;
   color: #fff;
   font-family: var(--sans);
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.20);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 38px;
+  letter-spacing: -0.01em;
 }
 
 .sendBtn:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-/* Received items */
+.sendBtn:active { transform: scale(0.96); }
+
+/* ── Received clips ── */
 .recvHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  animation: slideUp 0.35s ease 0.15s both;
 }
 
-.recvLabel {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.recvCount {
-  font-size: 0.75rem;
-}
+.recvLabel { font-size: 0.9rem; font-weight: 600; letter-spacing: -0.01em; }
+.recvCount { font-size: 0.72rem; color: var(--muted); }
 
 .empty {
   text-align: center;
-  padding: 36px 24px;
-  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  border-radius: var(--radius-xl);
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.875rem;
 }
 
-.emptyIcon {
-  display: block;
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
+.emptyIcon { display: block; font-size: 2rem; margin-bottom: 10px; opacity: 0.5; }
 
 .clipList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .clipItem {
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  animation: slideIn 0.18s ease;
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  animation: slideUp 0.18s ease;
+  transition: all var(--transition-base);
+}
+
+.clipItem:hover {
+  background: var(--glass-bg-hover) !important;
+  border-color: var(--glass-border-hover) !important;
 }
 
 .clipMeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.clipTime {
-  font-size: 0.72rem;
-}
+.clipTime { font-size: 0.70rem; color: var(--muted); }
 
 .copyBtn {
-  padding: 4px 12px;
+  padding: 5px 13px;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  background: var(--glass-bg);
+  border-radius: 99px;
+  background: var(--glass-bg-deeper);
   color: var(--text-secondary);
   font-family: var(--sans);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: inset 0 1px 0 var(--glass-border-top);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 30px;
 }
 
 .copyBtn:hover {
@@ -168,9 +175,14 @@
 }
 
 .clipText {
-  font-size: 0.88rem;
+  font-size: 0.875rem;
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.65;
+}
+
+@media (max-width: 600px) {
+  .sendBox { padding: 16px; }
+  .sendActions { flex-direction: row; }
 }

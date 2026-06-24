@@ -26,20 +26,42 @@ function useTheme() {
 }
 
 export default function App() {
-  const [authed, setAuthed]       = useState(false);
-  const [checking, setChecking]   = useState(true);
-  const [tab, setTab]             = useState('files');
-  const [files, setFiles]         = useState([]);
-  const [serverInfo, setServerInfo] = useState(null);
-  const [showQR, setShowQR]       = useState(false);
-  const [theme, toggleTheme]      = useTheme();
+  const [authed, setAuthed]             = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(true);
+  const [checking, setChecking]         = useState(true);
+  const [tab, setTab]                   = useState('files');
+  const [files, setFiles]               = useState([]);
+  const [serverInfo, setServerInfo]     = useState(null);
+  const [showQR, setShowQR]             = useState(false);
+  const [theme, toggleTheme]            = useTheme();
 
-  // Check auth on mount
+  // Check auth on mount.
+  // If passwordRequired is false the server is open — auto-login immediately.
   useEffect(() => {
     authStatus()
-      .then(() => setAuthed(true))
+      .then(async (data) => {
+        setPasswordRequired(data.passwordRequired);
+        if (!data.passwordRequired) {
+          // Open server — get a free token and skip the login screen
+          const { login } = await import('./api/client');
+          const res = await login('');
+          localStorage.setItem('localdrop_token', res.token);
+          setAuthed(true);
+        } else if (data.authenticated) {
+          setAuthed(true);
+        } else {
+          setAuthed(false);
+        }
+      })
       .catch(() => setAuthed(false))
       .finally(() => setChecking(false));
+  }, []);
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      const data = await listFiles();
+      setFiles(data.files || []);
+    } catch (_) {}
   }, []);
 
   // Load files + server info when authed
@@ -48,13 +70,6 @@ export default function App() {
     fetchFiles();
     getServerInfo().then(setServerInfo).catch(() => {});
   }, [authed]);
-
-  const fetchFiles = useCallback(async () => {
-    try {
-      const data = await listFiles();
-      setFiles(data.files || []);
-    } catch (_) {}
-  }, []);
 
   // Poll files every 30s while on Files tab
   useEffect(() => {
