@@ -1,0 +1,154 @@
+.page {
+  display:    flex;
+  min-height: 100vh;
+  position:   relative;
+}
+
+/* ── Left brand panel ─────────────────────────────────── */
+.leftPanel {
+  flex:           0 0 45%;
+  display:        flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding:        var(--space-12) var(--space-12);
+}
+
+.brandContent {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-6);
+}
+
+.logoGroup {
+  display:    flex;
+  align-items: center;
+  gap:        var(--space-4);
+}
+
+.logo {
+  width:      56px;
+  height:     56px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.logoName {
+  height:     32px;
+  object-fit: contain;
+}
+
+.tagline {
+  font-family: var(--font-display);
+  font-size:   28px;
+  font-weight: 700;
+  color:       var(--text-primary);
+  line-height: 1.3;
+  max-width:   340px;
+}
+
+.features {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-3);
+  margin-top:     var(--space-4);
+}
+
+.featureItem {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-3);
+  font-size:   15px;
+  color:       var(--text-secondary);
+}
+
+.featureDot {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  background:    var(--accent-gradient);
+  flex-shrink:   0;
+}
+
+.poweredBy {
+  font-size:      13px;
+  color:          var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── Right form panel ─────────────────────────────────── */
+.rightPanel {
+  flex:            1;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         var(--space-8);
+}
+
+.card {
+  width:      100%;
+  max-width:  420px;
+  padding:    var(--space-8);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-xl);
+}
+
+.tabs {
+  display:       flex;
+  gap:           var(--space-2);
+  margin-bottom: var(--space-6);
+  background:    var(--table-header-bg);
+  padding:       4px;
+  border-radius: var(--radius-md);
+}
+
+.tab {
+  flex:            1;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             6px;
+  padding:         8px;
+  border-radius:   var(--radius-sm);
+  border:          none;
+  background:      transparent;
+  color:           var(--text-secondary);
+  font-size:       13px;
+  font-weight:     500;
+  cursor:          pointer;
+  transition:      var(--transition-fast);
+  font-family:     var(--font-body);
+}
+.tab.tabActive {
+  background: var(--glass-bg-hover);
+  color:      var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.formHeader { margin-bottom: var(--space-6); }
+.formTitle  { font-size: 22px; font-weight: 700; }
+.formSubtitle { font-size: 13px; color: var(--text-muted); margin-top: var(--space-1); }
+
+.form {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-4);
+}
+
+.passwordWrap { position: relative; }
+.passwordWrap .form-input { padding-right: 44px; }
+.eyeBtn {
+  position:   absolute;
+  right:      12px;
+  top:        50%;
+  transform:  translateY(-50%);
+  background: none;
+  border:     none;
+  cursor:     pointer;
+  color:      var(--text-muted);
+  display:    flex;
+  padding:    4px;
+  transition: var(--transition-fast);
+}
+.eyeBtn:hover { color: var(--text-primary); }

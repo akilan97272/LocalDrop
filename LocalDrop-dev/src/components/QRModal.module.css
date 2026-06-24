@@ -1,57 +1,102 @@
+/* ══════════════════════════════════════════════════
+   QR Modal — Apple-style blurred overlay
+   Desktop: centered dialog
+   Mobile: bottom sheet with swipe-down-to-close
+══════════════════════════════════════════════════ */
+
+/* ── Backdrop ── */
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: var(--overlay);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
   display: flex;
-  align-items: flex-end;   /* sheet from bottom on mobile */
+  align-items: flex-end;   /* bottom sheet on mobile */
   justify-content: center;
-  animation: fadeIn 0.2s ease;
-  padding: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* dim layer */
+  background: transparent;
+  transition: background 0.32s ease;
 }
 
+.backdropVisible {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* ── Separate blur layer ── */
+/* Using a separate element means the blur doesn't affect the modal itself */
+.blurLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  backdrop-filter: saturate(180%) blur(0px);
+  -webkit-backdrop-filter: saturate(180%) blur(0px);
+  transition: backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease;
+  pointer-events: none;
+}
+
+.blurLayerVisible {
+  backdrop-filter: saturate(180%) blur(22px);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+}
+
+/* ── Modal panel ── */
 .modal {
-  width: 100%;
-  max-width: 380px;
-  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  padding: 8px 28px 36px;
-  text-align: center;
   position: relative;
-  animation: slideUp 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 1001;
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: 0 28px 40px;
+  padding-bottom: max(40px, calc(40px + env(safe-area-inset-bottom, 0px)));
+  text-align: center;
+
+  /* Enter: slide up from bottom */
+  transform: translateY(100%);
+  opacity: 0;
+  transition:
+    transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity   0.25s ease;
 }
 
-/* Drag handle */
-.modal::before {
-  content: '';
-  display: block;
+.modalVisible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Desktop: centered dialog */
+@media (min-width: 600px) {
+  .backdrop { align-items: center; padding: 24px; }
+
+  .modal {
+    border-radius: var(--radius-2xl);
+    padding: 0 32px 36px;
+    max-width: 380px;
+    /* Desktop enter: scale up */
+    transform: scale(0.88) translateY(12px);
+  }
+
+  .modalVisible {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Drag handle (mobile only) ── */
+.handle {
   width: 36px;
   height: 4px;
   background: var(--glass-border-hover);
   border-radius: 99px;
-  margin: 10px auto 20px;
+  margin: 12px auto 20px;
 }
 
-/* On desktop, show as centered dialog */
 @media (min-width: 600px) {
-  .backdrop {
-    align-items: center;
-    padding: 24px;
-  }
-  .modal {
-    border-radius: var(--radius-2xl);
-    padding: 32px 32px 36px;
-    max-width: 360px;
-  }
-  .modal::before { display: none; }
+  .handle { display: none; }
 }
 
+/* ── Close button ── */
 .close {
   position: absolute;
-  top: 18px;
-  right: 18px;
+  top: 16px;
+  right: 16px;
   background: var(--glass-bg-deeper);
   border: 1px solid var(--glass-border);
   border-radius: 50%;
@@ -60,68 +105,167 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   cursor: pointer;
   color: var(--text-secondary);
   transition: all var(--transition-fast);
   box-shadow: inset 0 1px 0 var(--glass-border-top);
   -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 
-.close:hover { background: var(--glass-bg-hover); color: var(--text); }
-.close:active { transform: scale(0.92); }
+.close:hover  { background: var(--glass-bg-hover); color: var(--text); }
+.close:active { transform: scale(0.88); }
+
+/* ── Header ── */
+.header { margin-bottom: 22px; }
+
+.headerIcon {
+  display: block;
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 20px var(--accent-glow));
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}
 
 .title {
   font-family: var(--mono);
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   margin-bottom: 5px;
   letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .sub {
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   color: var(--text-secondary);
-  margin-bottom: 24px;
 }
 
+/* ── QR wrap ── */
 .qrWrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 18px;
   background: var(--glass-bg-deeper);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  margin-bottom: 18px;
-  box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-border-top);
+  margin-bottom: 20px;
+  box-shadow: var(--glass-shadow-lg), inset 0 1px 0 var(--glass-border-top);
+  animation: qrWrapIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+@keyframes qrWrapIn {
+  from { opacity: 0; transform: scale(0.82); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .qr {
   display: block;
-  width: 180px;
-  height: 180px;
+  width: 190px;
+  height: 190px;
   border-radius: var(--radius-md);
+  opacity: 0;
+  transition: opacity 0.4s ease;
 }
 
-.qrLoading {
-  width: 180px;
-  height: 180px;
+.qrLoaded { opacity: 1; }
+
+/* QR skeleton shimmer */
+.qrSkeleton {
+  width: 190px;
+  height: 190px;
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  overflow: hidden;
+}
+
+.qrSkeletonInner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--glass-border) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease infinite;
+}
+
+/* Animated corner brackets */
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--accent);
+  border-style: solid;
+  animation: cornerGlow 2.5s ease-in-out infinite;
+}
+
+.cornerTL { top: 10px; left: 10px;  border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+.cornerTR { top: 10px; right: 10px; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
+.cornerBL { bottom: 10px; left: 10px;  border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
+.cornerBR { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+@keyframes cornerGlow {
+  0%, 100% { opacity: 0.5; border-color: var(--accent); }
+  50%       { opacity: 1;   border-color: var(--accent-hover); box-shadow: 0 0 8px var(--accent-glow); }
+}
+
+/* ── URL copy pill ── */
+.urlBox {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 0.875rem;
-}
-
-.urlBox {
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   background: var(--glass-bg-deeper);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 11px 14px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: inset 0 1px 0 var(--glass-border-top);
+  -webkit-tap-highlight-color: transparent;
+  animation: fadeIn 0.4s ease 0.3s both;
+}
+
+.urlBox:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg);
+}
+
+.urlBox:active { transform: scale(0.98); }
+
+.urlCopied {
+  border-color: var(--success) !important;
+  background: var(--success-dim) !important;
+}
+
+.urlText {
   font-size: 0.76rem;
   color: var(--accent);
   word-break: break-all;
-  box-shadow: inset 0 1px 0 var(--glass-border-top);
-  user-select: all;
+  text-align: left;
+  line-height: 1.4;
 }
+
+.urlCopied .urlText { color: var(--success); }
+
+.urlCopyHint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
+}
+
+.urlCopied .urlCopyHint { color: var(--success); }

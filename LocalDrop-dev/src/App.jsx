@@ -36,25 +36,33 @@ export default function App() {
   const [theme, toggleTheme]            = useTheme();
 
   // Check auth on mount.
-  // If passwordRequired is false the server is open — auto-login immediately.
+  // Everything runs inside one async function so setChecking(false)
+  // only fires after the full chain — including auto-login — is done.
+  // This prevents the login screen flashing when no password is set.
   useEffect(() => {
-    authStatus()
-      .then(async (data) => {
+    async function bootstrap() {
+      try {
+        const data = await authStatus();
         setPasswordRequired(data.passwordRequired);
+
         if (!data.passwordRequired) {
-          // Open server — get a free token and skip the login screen
+          // Open server: auto-login with empty password to get a token.
           const { login } = await import('./api/client');
           const res = await login('');
           localStorage.setItem('localdrop_token', res.token);
           setAuthed(true);
         } else if (data.authenticated) {
+          // Token in localStorage is still valid — go straight in.
           setAuthed(true);
-        } else {
-          setAuthed(false);
         }
-      })
-      .catch(() => setAuthed(false))
-      .finally(() => setChecking(false));
+        // else: password required, no valid token → show login screen
+      } catch (_) {
+        // Server unreachable or error — show login screen
+      } finally {
+        setChecking(false); // spinner off only after everything is settled
+      }
+    }
+    bootstrap();
   }, []);
 
   const fetchFiles = useCallback(async () => {

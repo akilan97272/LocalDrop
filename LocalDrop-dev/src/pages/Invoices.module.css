@@ -1,0 +1,285 @@
+/* ── List view ─────────────────────────────────────────── */
+.filters {
+  display:       flex;
+  gap:           var(--space-3);
+  margin-bottom: var(--space-5);
+  align-items:   center;
+}
+.searchWrap { position: relative; flex: 1; }
+.searchIcon {
+  position:  absolute;
+  left:      12px;
+  top:       50%;
+  transform: translateY(-50%);
+  color:     var(--text-muted);
+}
+
+/* ── Form layout ───────────────────────────────────────── */
+.section      { margin-bottom: var(--space-5); }
+.sectionTitle { font-size: 16px; font-weight: 700; margin-bottom: var(--space-4); }
+
+.grid3 {
+  display:               grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:                   var(--space-4);
+}
+
+/* Company / product selector with inline "+ New" button */
+.selectWithAdd {
+  display: flex;
+  gap:     6px;
+  align-items: center;
+}
+.selectWithAdd .form-input { flex: 1; }
+
+/* Items table wrapper — scrolls horizontally if needed */
+.itemsScroll {
+  overflow-x: auto;
+  margin-bottom: var(--space-4);
+}
+.itemsTable {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       13px;
+  min-width:       820px;
+}
+.itemsTable th {
+  background:    var(--table-header-bg);
+  padding:       8px 10px;
+  text-align:    left;
+  font-weight:   600;
+  font-size:     11px;
+  color:         var(--text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--table-border);
+  white-space:   nowrap;
+}
+.itemsTable td {
+  padding:    6px 8px;
+  border-bottom: 1px solid var(--table-border);
+  vertical-align: middle;
+}
+.itemsTable .form-input {
+  padding:   6px 10px;
+  font-size: 13px;
+}
+.computedCell {
+  font-size:   13px;
+  font-weight: 500;
+  white-space: nowrap;
+  color:       var(--text-primary);
+}
+
+/* Totals summary */
+.totalsBox {
+  max-width:   320px;
+  margin-left: auto;
+  border-top:  1px solid var(--table-border);
+  padding-top: var(--space-4);
+}
+.totalRow {
+  display:         flex;
+  justify-content: space-between;
+  padding:         5px 0;
+  font-size:       14px;
+  color:           var(--text-secondary);
+}
+.grandTotal {
+  font-size:   16px;
+  font-weight: 700;
+  color:       var(--text-primary);
+  border-top:  2px solid var(--glass-border);
+  padding-top: var(--space-3);
+  margin-top:  var(--space-2);
+}
+
+/* ── Quick-add modals ──────────────────────────────────── */
+.quickOverlay {
+  position:        fixed;
+  inset:           0;
+  background:      rgba(0,0,0,0.50);
+  backdrop-filter: blur(4px);
+  z-index:         calc(var(--z-modal) + 10);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         var(--space-4);
+}
+.quickModal {
+  width:      100%;
+  max-width:  480px;
+  padding:    var(--space-6);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-xl);
+  border:     1px solid var(--glass-border);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.40);
+}
+.quickHeader {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  margin-bottom:   var(--space-5);
+}
+.quickTitle  { font-size: 16px; font-weight: 700; }
+.quickForm   { display: flex; flex-direction: column; gap: var(--space-4); }
+.quickGrid   { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+/* ═══════════════════════════════════════════════════════
+   Invoice Paper — KTC bill format
+   ═══════════════════════════════════════════════════════ */
+.noPrint { /* screen only; hidden when printing */ }
+
+.invoicePaper {
+  background:    var(--bg-elevated);
+  border:        1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  overflow:      hidden;
+  max-width:     860px;
+  margin:        0 auto;
+  font-size:     13px;
+  color:         var(--text-primary);
+  box-shadow:    var(--glass-shadow);
+}
+
+.titleBar {
+  background:    var(--accent-gradient);
+  color:         white;
+  text-align:    center;
+  font-family:   var(--font-display);
+  font-size:     16px;
+  font-weight:   800;
+  letter-spacing: 0.12em;
+  padding:       8px 0;
+}
+
+.sellerHeader {
+  padding:       var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--table-border);
+}
+.sellerLeft {
+  display:     flex;
+  gap:         var(--space-4);
+  align-items: flex-start;
+}
+.sellerLogoImg { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; }
+.sellerName    { font-size: 17px; font-weight: 800; font-family: var(--font-display); margin-bottom: 4px; }
+.sellerAddr    { font-size: 11px; color: var(--text-secondary); }
+.sellerContact { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.sellerGstin   { font-size: 12px; font-weight: 600; margin-top: 4px; }
+
+/* Buyer + meta */
+.metaRow {
+  display:       flex;
+  border-bottom: 1px solid var(--table-border);
+}
+.buyerBlock {
+  flex:          1;
+  padding:       var(--space-4) var(--space-5);
+  border-right:  1px solid var(--table-border);
+}
+.blockLabel  { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 6px; }
+.buyerName   { font-size: 14px; font-weight: 700; }
+.buyerAddr   { font-size: 12px; margin-top: 3px; color: var(--text-secondary); line-height: 1.5; }
+.buyerGstin  { font-size: 12px; margin-top: 4px; }
+.metaKey     { color: var(--text-muted); padding-right: 10px; white-space: nowrap; font-size: 12px; }
+.invoiceMetaBlock { width: 240px; padding: var(--space-4) var(--space-5); }
+.metaTable   { border-collapse: collapse; width: 100%; }
+.metaTable td { padding: 4px 0; font-size: 13px; }
+
+/* Items table (print view) */
+.itemsTablePrint {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       13px;
+}
+.itemsTablePrint th {
+  background:  var(--table-header-bg);
+  padding:     8px 10px;
+  font-size:   11px;
+  font-weight: 700;
+  border:      1px solid var(--table-border);
+  text-align:  left;
+  white-space: nowrap;
+}
+.itemsTablePrint td {
+  padding: 8px 10px;
+  border:  1px solid var(--table-border);
+}
+.fillerRow td { height: 26px; border: 1px solid var(--table-border); }
+
+/* Footer */
+.footerRow {
+  display:       flex;
+  border-top:    1px solid var(--table-border);
+  border-bottom: 1px solid var(--table-border);
+}
+.wordsBlock {
+  flex:          1;
+  padding:       var(--space-4) var(--space-5);
+  border-right:  1px solid var(--table-border);
+}
+.wordsText   { font-size: 13px; font-weight: 600; margin-top: 4px; }
+.totalsBlock { width: 280px; padding: var(--space-2) 0; }
+.totalLine {
+  display:         flex;
+  justify-content: space-between;
+  padding:         5px var(--space-5);
+  font-size:       13px;
+  border-bottom:   1px solid var(--table-border);
+}
+.grandLine {
+  font-weight:  700;
+  font-size:    14px;
+  border-bottom: none;
+  padding-top:  10px;
+  margin-top:   2px;
+}
+
+/* Bottom: declaration + bank + sign */
+.bottomRow {
+  display:  flex;
+  font-size: 12px;
+  min-height: 110px;
+}
+.declarationBlock, .bankBlock, .signBlock {
+  flex:    1;
+  padding: var(--space-4) var(--space-5);
+  border-right: 1px solid var(--table-border);
+  line-height: 1.7;
+}
+.signBlock {
+  border-right:    none;
+  display:         flex;
+  flex-direction:  column;
+  justify-content: space-between;
+  text-align:      center;
+  font-weight:     600;
+}
+.signLine {
+  border-bottom: 1px solid var(--text-primary);
+  margin:        var(--space-8) var(--space-4) var(--space-2);
+}
+.dcPo { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+.poweredBy {
+  text-align:     center;
+  font-size:      11px;
+  color:          var(--text-muted);
+  padding:        8px;
+  border-top:     1px solid var(--table-border);
+  letter-spacing: 0.06em;
+}
+
+/* ── Print styles ──────────────────────────────────────── */
+@media print {
+  .noPrint { display: none !important; }
+  body > *:not(#invoice-print) { display: none !important; }
+  .invoicePaper {
+    border-radius: 0 !important;
+    box-shadow:    none !important;
+    max-width:     100% !important;
+    border:        none !important;
+  }
+  .titleBar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

@@ -131,3 +131,8 @@ body::after {
 /* ── Mobile safe-area helpers ── */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .safe-top    { padding-top:    env(safe-area-inset-top,    0px); }
+
+/* ── Clipboard particles (injected via JS) ── */
+.clipboard-particle {
+  will-change: left, top, opacity, transform;
+}

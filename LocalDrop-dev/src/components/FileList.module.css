@@ -284,3 +284,84 @@
   .actionBtn { width: 36px; height: 36px; min-width: 36px; } /* bigger tap targets */
   .toolbarRight { gap: 4px; }
 }
+
+/* ══════════════════════════════════════════
+   Selection animations
+══════════════════════════════════════════ */
+
+/* Left edge indicator bar */
+.selBar {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+}
+
+.selBarActive {
+  transform: scaleY(1);
+  opacity: 1;
+}
+
+/* Row must be position:relative for selBar */
+.row { position: relative; overflow: hidden; cursor: pointer; }
+
+/* Ripple keyframe — radial burst from center */
+.rowRipple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 50%, var(--accent-dim) 0%, transparent 70%);
+  animation: rowRippleBurst 0.38s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes rowRippleBurst {
+  0%   { opacity: 0; transform: scale(0.6); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* Flash on select — brief brightness spike */
+.rowFlash {
+  animation: rowSelectFlash 0.5s ease forwards;
+}
+
+@keyframes rowSelectFlash {
+  0%   { filter: brightness(1); }
+  25%  { filter: brightness(1.25) saturate(1.4); }
+  100% { filter: brightness(1); }
+}
+
+/* Icon bounce on select */
+.fileIconSelected {
+  animation: iconBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+}
+
+@keyframes iconBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35) rotate(-8deg); }
+  70%  { transform: scale(0.9)  rotate(4deg); }
+  100% { transform: scale(1)    rotate(0deg); }
+}
+
+/* Count badge in toolbar — animates when selection changes */
+.selCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: countPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes countPop {
+  0%   { transform: scale(0.75); opacity: 0.5; }
+  100% { transform: scale(1);    opacity: 1; }
+}

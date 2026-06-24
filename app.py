@@ -1,3 +1,57 @@
+"""
+LocalDrop — FastAPI edition.
+Drop-in replacement for the Flask app.py.
+
+Run (dev):
+    uvicorn app:app --host 0.0.0.0 --port 8080 --reload
+
+Run (production — replaces Gunicorn):
+    uvicorn app:app --host 0.0.0.0 --port 8080 --workers 4
+
+Or with Gunicorn + uvicorn workers (same CLI you used before):
+    gunicorn app:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8080
+
+API surface (unchanged from Flask version):
+────────────────────────────────────────────────────────────
+GET   /api/auth/status          → {passwordRequired, authenticated}
+POST  /api/auth/login           → {token, passwordRequired}
+POST  /api/auth/logout          → {success: true}
+
+GET   /api/files                → {files: [...]}
+POST  /api/upload               → {uploaded: [...], warnings: []}
+DELETE /api/delete/{filename}   → {deleted: "..."}
+POST  /api/delete               → {deleted: [...], errors: [...]}
+
+GET   /download/{filename}      → file stream (Range-resumable)
+POST  /api/download             → ZIP stream of selected files
+
+GET   /api/clipboard            → {items: [...]}
+POST  /api/clipboard            → {text, updated}
+DELETE /api/clipboard           → {text: "", updated: 0}
+
+GET   /api/server-info          → {url, ip, port, passwordRequired, maxMB}
+GET   /health                   → {status, ip, port}
+────────────────────────────────────────────────────────────
+
+What changed vs. the Flask version
+────────────────────────────────────────────────────────────
+• Flask → FastAPI / Starlette
+• flask-cors → fastapi.middleware.cors.CORSMiddleware
+• werkzeug.utils.secure_filename → own safe_filename() (no Werkzeug dep)
+• parse_range_header (Werkzeug) → own _parse_range()
+• @login_required decorator → Depends(require_auth) FastAPI dependency
+• Response streaming uses StreamingResponse
+• /api/files now returns {"files": [...]} (was a bare list)
+• file_info() now always includes size_bytes (raw int) for the frontend
+• No password → /api/auth/status returns authenticated:true immediately,
+  React skips the login screen entirely
+────────────────────────────────────────────────────────────
+
+Dependencies (pip install):
+    fastapi uvicorn[standard]
+    (nothing else — no flask, no werkzeug, no flask-cors needed)
+"""
+
 import io
 import json
 import logging
@@ -100,13 +154,18 @@ UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="LocalDrop", version="2.0.0", docs_url="/api/docs")
 
+# ── CORS ──────────────────────────────────────────────────────────
+# Must be the FIRST middleware added.
+# allow_credentials=False is required when allow_origins=["*"].
+# Explicit methods list ensures OPTIONS preflight always gets 200.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # restrict to your domain in production
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition", "Content-Length", "Content-Range"],
+    max_age=3600,
 )
 
 
@@ -625,48 +684,76 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 
 # ──────────────────────────────────────────────────────────────────
-#  Static files — serve the React build in production
+#  Static files — serve the React build
 #
-#  Directory layout expected:
+#  Expected layout after `npm run build`:
+#
 #      app.py
-#      static/react/          ← output of `npm run build`
-#          index.html
-#          assets/
+#      static/
+#        react/
+#          index.html          ← SPA entry point
+#          assets/             ← JS/CSS bundles
 #
-#  This MUST be mounted LAST — after all /api and /download routes —
-#  so the wildcard catch-all doesn't swallow API requests.
+#  This MUST be mounted LAST — after all /api/* and /download routes —
+#  because the "/{full_path}" catch-all would otherwise swallow everything.
 #
-#  How the SPA fallback works:
-#    - /api/*, /download/*, /health  → handled by the routes above
-#    - /assets/*, /favicon.ico etc.  → served as static files
-#    - anything else (/, /some/page) → returns index.html so React
-#      Router can handle client-side navigation
+#  Flow:
+#    /api/**         → FastAPI routes above
+#    /download/**    → FastAPI routes above
+#    /assets/**      → StaticFiles (JS/CSS/images from the build)
+#    anything else   → index.html  (React Router handles client nav)
 # ──────────────────────────────────────────────────────────────────
 
 _STATIC_DIR = Path(__file__).parent / "static" / "react"
 
 if _STATIC_DIR.is_dir():
     from starlette.staticfiles import StaticFiles
-    from starlette.responses import FileResponse
+    from starlette.responses import FileResponse as _FileResponse
 
-    # Serve /assets/*, /favicon.ico, etc. as real static files
-    app.mount("/assets", StaticFiles(directory=str(_STATIC_DIR / "assets")), name="assets")
+    _ASSETS_DIR = _STATIC_DIR / "assets"
+    if _ASSETS_DIR.is_dir():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=str(_ASSETS_DIR)),
+            name="assets",
+        )
 
-    # SPA catch-all: every unmatched path returns index.html
+    # Serve favicon and other root-level static files
+    @app.get("/favicon.ico", include_in_schema=False)
+    async def favicon():
+        f = _STATIC_DIR / "favicon.ico"
+        if f.is_file():
+            return _FileResponse(str(f))
+        raise HTTPException(status_code=404, detail="No favicon")
+
+    # SPA catch-all — every unmatched path returns index.html so
+    # React Router can handle /files, /settings, etc. client-side.
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
         index = _STATIC_DIR / "index.html"
         if index.is_file():
-            return FileResponse(str(index))
+            return _FileResponse(
+                str(index),
+                headers={"Cache-Control": "no-cache"},   # always fresh
+            )
         return JSONResponse(
             status_code=503,
-            content={"error": "Frontend not built — run `npm run build` in the frontend folder"},
+            content={
+                "error": "Frontend not built yet.",
+                "hint": "Run `npm run build` inside the frontend/ folder.",
+            },
         )
+
+    log.info("static_files_mounted", extra={"dir": str(_STATIC_DIR)})
+
 else:
-    log.warning("static_dir_missing", extra={
-        "path": str(_STATIC_DIR),
-        "hint": "Run `npm run build` in the frontend folder to generate static/react/",
-    })
+    log.warning(
+        "static_dir_missing",
+        extra={
+            "path": str(_STATIC_DIR),
+            "hint": "Run `npm run build` in frontend/ to generate static/react/",
+        },
+    )
 
 
 # ──────────────────────────────────────────────────────────────────

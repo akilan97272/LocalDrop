@@ -131,7 +131,12 @@ export default function FileList({ files, onRefresh }) {
       <div className={styles.toolbar}>
         <label className={styles.checkAll}>
           <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-          <span>{selected.size > 0 ? `${selected.size} selected` : `${files.length} files`}</span>
+          {selected.size > 0
+            ? <span key={selected.size} className={styles.selCount}>
+                <span>✦</span>{selected.size} selected
+              </span>
+            : <span>{files.length} files</span>
+          }
         </label>
 
         <div className={styles.toolbarRight}>
@@ -219,15 +224,38 @@ export default function FileList({ files, onRefresh }) {
 }
 
 function FileRow({ file, selected, onToggle, onDownload, onDelete }) {
+  const [rippling, setRippling] = useState(false);
+  const [justSelected, setJustSelected] = useState(false);
+
+  function handleToggle() {
+    setRippling(true);
+    if (!selected) setJustSelected(true);
+    setTimeout(() => setRippling(false),    400);
+    setTimeout(() => setJustSelected(false), 600);
+    onToggle();
+  }
+
   return (
-    <div className={`${styles.row} ${selected ? styles.rowSelected : ''} glass`}>
+    <div
+      className={[
+        styles.row, 'glass',
+        selected     ? styles.rowSelected : '',
+        rippling     ? styles.rowRipple   : '',
+        justSelected ? styles.rowFlash    : '',
+      ].filter(Boolean).join(' ')}
+      onClick={handleToggle}
+    >
+      <div className={`${styles.selBar} ${selected ? styles.selBarActive : ''}`} />
       <input
         type="checkbox"
         checked={selected}
-        onChange={onToggle}
+        onChange={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         className={styles.checkbox}
       />
-      <span className={styles.fileIcon}>{fileIcon(file.name)}</span>
+      <span className={`${styles.fileIcon} ${selected ? styles.fileIconSelected : ''}`}>
+        {fileIcon(file.name)}
+      </span>
       <span className={styles.fileName}>
         {file.name}
         {file.kind && file.kind !== 'other' && (
@@ -241,8 +269,8 @@ function FileRow({ file, selected, onToggle, onDownload, onDelete }) {
         {file.uploaded && <span className={styles.uploadedDate}>{file.uploaded}</span>}
       </span>
       <div className={styles.fileActions}>
-        <button className={styles.actionBtn} onClick={onDownload} title="Download">⬇</button>
-        <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={onDelete} title="Delete">🗑</button>
+        <button className={styles.actionBtn} onClick={e => { e.stopPropagation(); onDownload(); }} title="Download">⬇</button>
+        <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={e => { e.stopPropagation(); onDelete(); }} title="Delete">🗑</button>
       </div>
     </div>
   );
