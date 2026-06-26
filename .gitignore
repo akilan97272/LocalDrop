@@ -2,9 +2,10 @@ logs/*
 __pycache__/*
 venv/*
 uploads/*
-.secret_key
+.secret_*
 localdrop.service
 localdrop.pid
 .clipboard
 static/*
 logs/*
+.password_*
