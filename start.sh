@@ -31,7 +31,19 @@ if [ ! -d "$DIR/venv" ]; then
         echo "  [✗] python3-venv missing. Run: sudo apt install python3-venv"
         exit 1
     }
-fi
+    source "$DIR/venv/bin/activate"
+    pip install -r "$DIR/requirements.txt" || {
+        echo "  [✗] Failed to install dependencies from requirements.txt"
+        exit 1
+    }
+else
+    echo "  [→] Using existing virtualenv [path: $DIR/venv]"
+    source "$DIR/venv/bin/activate"
+    pip install -r "$DIR/requirements.txt" || {
+        echo "  [✗] Failed to install dependencies from requirements.txt"
+        exit 1
+    }
+fi  
 
 PYTHON="$DIR/venv/bin/python3"
 PIP="$DIR/venv/bin/pip"
