@@ -150,3 +150,97 @@
   -webkit-backdrop-filter: var(--glass-blur-xs);
   animation: slideIn 0.2s ease;
 }
+
+/* ── Show/hide password toggle ── */
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+  padding: 4px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--transition-fast);
+}
+
+.eyeBtn:hover { color: var(--text); }
+
+/* ── Input shake on wrong password ── */
+@keyframes inputShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+.inputShake { animation: inputShake 0.45s ease; }
+
+/* ── Attempts warning ── */
+.attemptsWarn {
+  position: relative;
+  background: var(--danger-dim);
+  border: 1px solid rgba(248,113,113,0.20);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+.attemptsBar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: rgba(248, 113, 113, 0.15);
+  transition: width 0.4s ease;
+}
+
+.attemptsText {
+  position: relative;
+  font-size: 0.80rem;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+/* ── Lockout panel ── */
+.lockout {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--danger-dim);
+  border: 1px solid rgba(248,113,113,0.25);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  text-align: left;
+  animation: slideUp 0.3s ease;
+}
+
+.lockoutIcon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  animation: pulse 2s ease infinite;
+}
+
+.lockoutTitle {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--danger);
+  margin-bottom: 4px;
+}
+
+.lockoutTimer {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.lockoutTimer strong {
+  color: var(--text);
+  font-family: var(--mono);
+}

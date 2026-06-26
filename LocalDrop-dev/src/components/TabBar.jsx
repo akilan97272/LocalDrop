@@ -3,6 +3,7 @@ import styles from './TabBar.module.css';
 const TABS = [
   { id: 'files',     label: 'Files',     icon: '🗂' },
   { id: 'clipboard', label: 'Clipboard', icon: '📋' },
+  { id: 'settings',  label: 'Settings',  icon: '⚙️' },
 ];
 
 export default function TabBar({ active, onChange }) {

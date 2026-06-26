@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  // OS env (exported by start.sh) wins over .env files
   const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
 
   const port   = parseInt(env.LOCALDROP_PORT || '5000', 10);
@@ -29,11 +28,12 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
 
     define: {
-      // In dev: empty string → Vite proxy handles /api/* (no CORS issues)
-      // In prod build: real URL baked in for standalone deployments
-      'import.meta.env.VITE_API_URL': JSON.stringify(
-        mode === 'development' ? '' : apiUrl
-      ),
+      // ALWAYS bake in '' for both dev and prod.
+      // In dev:  Vite proxy rewrites /api/* → backend (no CORS, no CSP issues)
+      // In prod: FastAPI serves the built files, so /api/* is same-origin
+      //          → browser never makes a cross-origin request
+      //          → CSP connect-src 'self' covers everything
+      'import.meta.env.VITE_API_URL': JSON.stringify(''),
     },
 
     server: {
@@ -46,9 +46,6 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      // Output goes into ../static/react/ relative to this vite.config.js.
-      // That puts it at:  <project_root>/static/react/
-      // FastAPI serves from there via the SPA fallback in app.py.
       outDir:      '../static/react',
       emptyOutDir: true,
     },

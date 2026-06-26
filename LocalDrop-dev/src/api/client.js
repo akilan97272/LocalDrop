@@ -30,9 +30,12 @@ async function handleResponse(res) {
 // ── Auth ──────────────────────────────────────────────────────────────
 
 export async function authStatus() {
-  const res = await fetch(`${BASE_URL}/api/auth/status`, {
-    headers: authHeaders(),
-  });
+  // Never send a stale/empty Bearer token on the status check —
+  // it can cause a 400 on some server configs. Only attach it if
+  // we actually have one stored (i.e. a returning session).
+  const token = getToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const res = await fetch(`${BASE_URL}/api/auth/status`, { headers });
   return handleResponse(res);
 }
 
@@ -197,3 +200,25 @@ export async function clearClipboard() {
   });
   return handleResponse(res);
 }
+
+// ── Security / Auth management ────────────────────────────────────
+
+export async function getLockoutStatus() {
+  const res = await fetch(`${BASE_URL}/api/auth/lockout-status`, {
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
+}
+
+export async function setPassword(currentPassword, newPassword) {
+  const res = await fetch(`${BASE_URL}/api/auth/set-password`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+  return handleResponse(res);
+}
+

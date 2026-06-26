@@ -9,6 +9,7 @@ import UploadZone     from './components/UploadZone';
 import FileList       from './components/FileList';
 import ClipboardPanel from './components/ClipboardPanel';
 import QRModal        from './components/QRModal';
+import SettingsPanel  from './components/SettingsPanel';
 
 import './themes.css';
 import './globals.css';
@@ -46,20 +47,28 @@ export default function App() {
         setPasswordRequired(data.passwordRequired);
 
         if (!data.passwordRequired) {
-          // Open server: auto-login with empty password to get a token.
-          const { login } = await import('./api/client');
-          const res = await login('');
-          localStorage.setItem('localdrop_token', res.token);
+          // Open server — backend confirmed no password needed.
+          // Get a signed token so subsequent requests have auth headers,
+          // but do it in the background — don't block the UI on it.
+          // We set authed:true immediately since the server said open.
           setAuthed(true);
+          try {
+            const { login } = await import('./api/client');
+            const res = await login('');
+            localStorage.setItem('localdrop_token', res.token);
+          } catch (_) {
+            // Token fetch failed — that's ok, server is open so
+            // requests will still work (require_auth returns early).
+          }
         } else if (data.authenticated) {
-          // Token in localStorage is still valid — go straight in.
+          // Password-protected and stored token is still valid.
           setAuthed(true);
         }
         // else: password required, no valid token → show login screen
       } catch (_) {
-        // Server unreachable or error — show login screen
+        // Server unreachable — show login screen, user can retry
       } finally {
-        setChecking(false); // spinner off only after everything is settled
+        setChecking(false);
       }
     }
     bootstrap();
@@ -126,6 +135,11 @@ export default function App() {
         {/* Clipboard tab */}
         {tab === 'clipboard' && (
           <ClipboardPanel active={tab === 'clipboard'} />
+        )}
+
+        {/* Settings tab */}
+        {tab === 'settings' && (
+          <SettingsPanel active={tab === 'settings'} />
         )}
       </div>
 
