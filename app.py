@@ -1,4 +1,3 @@
-
 import hashlib
 import hmac
 import io
@@ -41,7 +40,36 @@ CLIPBOARD_FILE  = Path(__file__).parent / ".clipboard"
 _PASSWORD_FILE  = Path(__file__).parent / ".password_hash"   # bcrypt hash on disk
 _CONFIG_FILE    = Path(__file__).parent / ".config"          # JSON: max_mb etc.
 
+
+# ── Runtime-settable config (survives across workers via file) ────────
+
+def _read_config() -> dict:
+    """Read .config JSON. Returns defaults if missing or corrupt."""
+    try:
+        if _CONFIG_FILE.exists():
+            return json.loads(_CONFIG_FILE.read_text())
+    except Exception:
+        pass
+    return {}
+
+
+def _write_config(data: dict) -> None:
+    _CONFIG_FILE.write_text(json.dumps(data, indent=2))
+    _CONFIG_FILE.chmod(0o600)
+
+
+def _get_max_mb() -> int:
+    """Max upload size in MB — from .config file, falls back to env var."""
+    return int(_read_config().get("max_mb", _DEFAULT_MAX_MB))
+
+
+def _set_max_mb(mb: int) -> None:
+    cfg = _read_config()
+    cfg["max_mb"] = mb
+    _write_config(cfg)
+
 MAX_FILE_SIZE   = int(os.environ.get("LOCALDROP_MAX_MB", 500)) * 1024 * 1024
+_DEFAULT_MAX_MB = int(os.environ.get("LOCALDROP_MAX_MB", 500))   # env baseline
 PORT            = int(os.environ.get("LOCALDROP_PORT",  5000))
 TOKEN_TTL       = int(os.environ.get("LOCALDROP_TOKEN_TTL_HOURS", 24)) * 3600
 ENCRYPT_AT_REST = os.environ.get("LOCALDROP_ENCRYPT", "0").strip() == "1"
@@ -232,30 +260,7 @@ def _make_logger(name: str, filename: str) -> logging.Logger:
 log   = _make_logger("localdrop", "app.log")
 audit = _make_logger("localdrop.audit", "audit.log")
 
-
-# ══════════════════════════════════════════════════════════════════════
-#  HMAC-signed tokens
-#
-#  Format:  <payload_b64>.<signature_hex>
-#  Payload: JSON { "jti": <uuid>, "iat": <unix_ts>, "exp": <unix_ts> }
-#  Signature: HMAC-SHA256(SECRET_KEY, payload_b64)
-#
-#  Tokens are also stored in _VALID_TOKENS so logout invalidates them
-#  before expiry. The signature prevents forgery without needing a DB.
-# ══════════════════════════════════════════════════════════════════════
-
 import base64 as _b64
-
-# ── Token store — file-backed so all Gunicorn workers share state ─────
-#
-# Tokens are HMAC-signed (unforgeable) and carry their own expiry, so
-# we don't need to store every issued token. We only need a revocation
-# list for explicit logouts and password-change invalidations.
-#
-# Revocation list: .revoked_tokens  — one jti per line, pruned on read.
-# All workers write to / read from the same file → shared state without
-# needing Redis or a DB.
-
 _REVOKED_FILE = Path(__file__).parent / ".revoked_tokens"
 _REVOKED_CACHE_TTL = 2.0   # re-read file at most every 2 s
 
@@ -288,7 +293,7 @@ class _RevokedStore:
                         l for l in lines
                         if l.strip() and l.split(":")[0] in live
                     )
-                    _REVOKED_FILE.write_text(pruned + "\n")
+                    _REVOKED_FILE.write_text(pruned + "")
                 else:
                     _REVOKED_FILE.unlink(missing_ok=True)
             else:
@@ -309,7 +314,7 @@ class _RevokedStore:
         """Add a jti to the revocation list on disk."""
         try:
             with open(_REVOKED_FILE, "a") as f:
-                f.write(f"{jti}:{exp}\n")
+                f.write(f"{jti}:{exp}")
         except OSError:
             pass
         self._revoked.add(jti)
@@ -321,7 +326,7 @@ class _RevokedStore:
         # We use a special entry with jti="*" and exp=now to mark a
         # global invalidation epoch. _verify_token checks this.
         try:
-            _REVOKED_FILE.write_text(f"*:{time.time()}/n")
+            _REVOKED_FILE.write_text(f"*:{time.time()}")
         except OSError:
             pass
         self._revoked = {"*"}
@@ -926,12 +931,12 @@ async def api_upload(
                     first_chunk = False
 
                 written += len(chunk)
-                if written > MAX_FILE_SIZE:
+                if written > _get_max_mb() * 1024 * 1024:
                     out.close()
                     dest.unlink(missing_ok=True)
                     raise HTTPException(
                         status_code=413,
-                        detail=f"File exceeds the {MAX_FILE_SIZE // (1024*1024)} MB limit",
+                        detail=f"File exceeds the {_get_max_mb()} MB limit",
                     )
                 sha256.update(chunk)
                 out.write(chunk)
@@ -1164,7 +1169,7 @@ def api_server_info(_: None = Depends(require_auth)):
         "ip":               get_local_ip(),
         "port":             PORT,
         "passwordRequired": _password_required(),
-        "maxMB":            MAX_FILE_SIZE // (1024 * 1024),
+        "maxMB":            _get_max_mb(),
         "encrypted":        ENCRYPT_AT_REST,
         "tokenTTLHours":    TOKEN_TTL // 3600,
     }
@@ -1173,6 +1178,39 @@ def api_server_info(_: None = Depends(require_auth)):
 @app.get("/health")
 def health():
     return {"status": "ok", "ip": get_local_ip(), "port": PORT}
+
+
+# ══════════════════════════════════════════════════════════════════════
+#  Routes — Settings
+# ══════════════════════════════════════════════════════════════════════
+
+class MaxUploadBody(BaseModel):
+    max_mb: int
+
+    @field_validator("max_mb")
+    @classmethod
+    def validate_mb(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("max_mb must be at least 1")
+        if v > 100_000:
+            raise ValueError("max_mb cannot exceed 100000 (100 GB)")
+        return v
+
+
+@app.post("/api/settings/max-upload")
+def api_set_max_upload(
+    body: MaxUploadBody,
+    request: Request,
+    _: None = Depends(require_auth),
+):
+    """
+    POST /api/settings/max-upload
+    { "max_mb": 1000 }
+    Persists to .config so all workers pick it up within 2s.
+    """
+    _set_max_mb(body.max_mb)
+    audit.info("max_upload_changed", extra={"max_mb": body.max_mb, "ip": request.client.host})
+    return {"success": True, "maxMB": body.max_mb}
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -1194,7 +1232,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 #  Static files (SPA)
 # ══════════════════════════════════════════════════════════════════════
 
-_STATIC_DIR = Path(__file__).parent / "static" / "react"
+_STATIC_DIR = Path(__file__).parent / "static"
 
 if _STATIC_DIR.is_dir():
     from starlette.staticfiles import StaticFiles
@@ -1202,8 +1240,11 @@ if _STATIC_DIR.is_dir():
 
     _ASSETS_DIR = _STATIC_DIR / "assets"
     if _ASSETS_DIR.is_dir():
-        app.mount("/assets", StaticFiles(directory=str(_ASSETS_DIR)), name="assets")
-
+        app.mount(
+            "/",
+            StaticFiles(directory=str(_STATIC_DIR), html=True),
+            name="frontend",
+        )
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():
         f = _STATIC_DIR / "favicon.ico"

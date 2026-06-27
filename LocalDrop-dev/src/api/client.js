@@ -222,3 +222,12 @@ export async function setPassword(currentPassword, newPassword) {
   return handleResponse(res);
 }
 
+
+export async function setMaxUploadSize(mb) {
+  const res = await fetch(`${BASE_URL}/api/settings/max-upload`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ max_mb: mb }),
+  });
+  return handleResponse(res);
+}

@@ -21,49 +21,51 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Layered scene background ── */
-
-/* Layer 1: base gradient */
 body::before {
   content: '';
-  position: fixed; inset: 0; z-index: 0;
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+
+  /* Background image — theme-specific file */
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  /* Darken/lighten the image slightly so glass panels read clearly */
+  filter: var(--bg-image-filter, none);
+
+  /* Smooth crossfade when theme switches */
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Ambient orb gradients blended over the image */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(ellipse 80vw 60vh at 15% 10%,  var(--orb1) 0%, transparent 65%),
     radial-gradient(ellipse 60vw 50vh at 85% 80%,  var(--orb2) 0%, transparent 65%),
     radial-gradient(ellipse 40vw 40vh at 50% 50%,  var(--orb3) 0%, transparent 65%);
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
-/* Layer 2: subtle noise texture over everything */
-body::after {
-  content: '';
-  position: fixed; inset: 0; z-index: 0;
-  background-image: var(--bg-noise, none);
-  background-repeat: repeat;
-  background-size: 200px 200px;
-  opacity: 0.5;
   pointer-events: none;
 }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 99px;
-}
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 99px; }
 
 /* ══════════════════════════════════════════════════
    Glass utility classes
-   Apple-style: high saturation, thick blur, inner
-   top-edge specular highlight, layered shadows.
 ══════════════════════════════════════════════════ */
 
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  /* Top highlight simulates light hitting the glass edge */
   box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-border-top);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -85,12 +87,12 @@ body::after {
   -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
-/* ── Typography utils ── */
-.mono   { font-family: var(--mono); }
-.muted  { color: var(--muted); }
+/* ── Typography ── */
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); }
 .text-accent { color: var(--accent); }
 
-/* ── Touch target helper (iOS 44pt minimum) ── */
+/* ── Touch target helper ── */
 .touch-target {
   min-width: 44px;
   min-height: 44px;
@@ -98,6 +100,9 @@ body::after {
   align-items: center;
   justify-content: center;
 }
+
+/* ── Clipboard particles ── */
+.clipboard-particle { will-change: left, top, opacity, transform; }
 
 /* ── Keyframes ── */
 @keyframes slideUp {
@@ -128,11 +133,6 @@ body::after {
   to   { background-position:  200% center; }
 }
 
-/* ── Mobile safe-area helpers ── */
+/* ── Safe area ── */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
 .safe-top    { padding-top:    env(safe-area-inset-top,    0px); }
-
-/* ── Clipboard particles (injected via JS) ── */
-.clipboard-particle {
-  will-change: left, top, opacity, transform;
-}

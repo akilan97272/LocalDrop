@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      outDir:      '../static/react',
+      outDir:      '../static',
       emptyOutDir: true,
     },
   };

@@ -57,8 +57,8 @@ echo "  [→] Installing Python dependencies …"
 echo "  [✓] Python dependencies ready"
 
 # ── Frontend build ────────────────────────────────────────────────
-FRONTEND_DIR="$DIR/frontend"   # adjust if your Vite project is elsewhere
-STATIC_OUT="$DIR/static/react"
+FRONTEND_DIR="$DIR/LocalDrop-dev"   # adjust if your Vite project is elsewhere
+STATIC_OUT="$DIR/static"
 
 if [ -d "$FRONTEND_DIR" ]; then
     if [ ! -d "$STATIC_OUT" ] || [ "$FRONTEND_DIR/src" -nt "$STATIC_OUT/index.html" ] 2>/dev/null; then
@@ -67,7 +67,7 @@ if [ -d "$FRONTEND_DIR" ]; then
         # Pass env vars so vite.config.js bakes the correct API URL
         LOCALDROP_PORT="$PORT" \
         LOCALDROP_API_URL="http://127.0.0.1:$PORT" \
-        npm run build && echo "  [✓] Frontend built → $STATIC_OUT" || \
+        npm install && npm run build && echo "  [✓] Frontend built → $STATIC_OUT" || \
             echo "  [!] Frontend build failed — serving API only"
         cd "$DIR"
     else
@@ -84,10 +84,10 @@ if [ ! -f "$SECRET_FILE" ]; then
     echo "  [✓] Secret key created"
 fi
 
-# ── firewall (best-effort) ────────────────────────────────────────
-if command -v ufw >/dev/null 2>&1; then
-    sudo ufw allow "$PORT/tcp" >/dev/null 2>&1 && echo "  [✓] ufw: port $PORT open" || true
-fi
+# # ── firewall (best-effort) ────────────────────────────────────────
+# if command -v ufw >/dev/null 2>&1; then
+#     sudo ufw allow "$PORT/tcp" >/dev/null 2>&1 && echo "  [✓] ufw: port $PORT open" || true
+# fi
 
 # ── LAN IP ────────────────────────────────────────────────────────
 LAN_IP=$("$PYTHON" -c "

@@ -1,42 +1,40 @@
 import { useState, useEffect } from 'react';
-import { setPassword, getServerInfo } from '../api/client';
+import { setPassword, getServerInfo, setMaxUploadSize } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import styles from './SettingsPanel.module.css';
 
+// ── Password strength ─────────────────────────────────────────────
+
+function strengthScore(pw) {
+  if (!pw) return 0;
+  let s = 0;
+  if (pw.length >= 8)  s++;
+  if (pw.length >= 14) s++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
+  if (/\d/.test(pw))   s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return Math.min(4, s);
+}
+
+const STRENGTH_LABEL = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+const STRENGTH_COLOR = ['', 'var(--danger)', 'var(--warn)', 'var(--accent)', 'var(--success)'];
+
+// ── Password Section ──────────────────────────────────────────────
+
 function PasswordSection({ serverInfo, onChanged }) {
   const toast = useToast();
-  const [currentPw,  setCurrentPw]  = useState('');
-  const [newPw,      setNewPw]      = useState('');
-  const [confirmPw,  setConfirmPw]  = useState('');
-  const [showPws,    setShowPws]    = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [strength,   setStrength]   = useState(0); // 0-4
-
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw,     setNewPw]     = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPws,   setShowPws]   = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const strength = strengthScore(newPw);
   const hasPassword = serverInfo?.passwordRequired;
-
-  // Password strength meter
-  useEffect(() => {
-    if (!newPw) { setStrength(0); return; }
-    let score = 0;
-    if (newPw.length >= 8)                          score++;
-    if (newPw.length >= 14)                         score++;
-    if (/[A-Z]/.test(newPw) && /[a-z]/.test(newPw)) score++;
-    if (/\d/.test(newPw))                           score++;
-    if (/[^A-Za-z0-9]/.test(newPw))                score++;
-    setStrength(Math.min(4, score));
-  }, [newPw]);
-
-  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const strengthColor = ['', 'var(--danger)', 'var(--warn)', 'var(--accent)', 'var(--success)'];
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (newPw && newPw !== confirmPw) {
-      toast('Passwords do not match', 'error'); return;
-    }
-    if (newPw && newPw.length < 4) {
-      toast('Password must be at least 4 characters', 'error'); return;
-    }
+    if (newPw && newPw !== confirmPw) { toast('Passwords do not match', 'error'); return; }
+    if (newPw && newPw.length < 4)   { toast('Password must be at least 4 characters', 'error'); return; }
     setLoading(true);
     try {
       const res = await setPassword(currentPw, newPw);
@@ -57,9 +55,7 @@ function PasswordSection({ serverInfo, onChanged }) {
         <div>
           <div className={styles.sectionTitle}>Access Password</div>
           <div className={styles.sectionSub}>
-            {hasPassword
-              ? 'Server is password protected'
-              : 'No password set — anyone on the network can access'}
+            {hasPassword ? 'Server is password protected' : 'No password — anyone on the network can access'}
           </div>
         </div>
         <div className={`${styles.pill} ${hasPassword ? styles.pillOn : styles.pillOff}`}>
@@ -68,7 +64,6 @@ function PasswordSection({ serverInfo, onChanged }) {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Current password — only shown if one is set */}
         {hasPassword && (
           <div className={styles.field}>
             <label className={styles.label}>Current Password</label>
@@ -100,30 +95,21 @@ function PasswordSection({ serverInfo, onChanged }) {
               autoComplete="new-password"
             />
             <button
-              type="button"
-              className={styles.eyeBtn}
+              type="button" className={styles.eyeBtn}
               onClick={() => setShowPws(s => !s)}
-              aria-label="Toggle visibility"
             >{showPws ? '🙈' : '👁'}</button>
           </div>
-
-          {/* Strength meter */}
           {newPw.length > 0 && (
             <div className={styles.strengthWrap}>
               <div className={styles.strengthBar}>
                 {[1,2,3,4].map(i => (
-                  <div
-                    key={i}
-                    className={styles.strengthSegment}
-                    style={{
-                      background: i <= strength ? strengthColor[strength] : 'var(--divider)',
-                      transition: 'background 0.3s ease',
-                    }}
+                  <div key={i} className={styles.strengthSegment}
+                    style={{ background: i <= strength ? STRENGTH_COLOR[strength] : 'var(--divider)', transition: 'background 0.3s ease' }}
                   />
                 ))}
               </div>
-              <span className={styles.strengthLabel} style={{ color: strengthColor[strength] }}>
-                {strengthLabel[strength]}
+              <span className={styles.strengthLabel} style={{ color: STRENGTH_COLOR[strength] }}>
+                {STRENGTH_LABEL[strength]}
               </span>
             </div>
           )}
@@ -148,8 +134,7 @@ function PasswordSection({ serverInfo, onChanged }) {
 
         <div className={styles.formActions}>
           {hasPassword && !newPw && (
-            <button
-              type="submit"
+            <button type="submit"
               className={`${styles.btn} ${styles.btnDanger}`}
               disabled={loading || !currentPw}
             >
@@ -157,14 +142,10 @@ function PasswordSection({ serverInfo, onChanged }) {
             </button>
           )}
           {(newPw || !hasPassword) && (
-            <button
-              type="submit"
-              className={styles.btn}
+            <button type="submit" className={styles.btn}
               disabled={loading || (hasPassword && !currentPw) || (newPw && newPw !== confirmPw)}
             >
-              {loading
-                ? <span className={styles.spinner}/>
-                : hasPassword ? '🔑 Update Password' : '🔒 Set Password'}
+              {loading ? <span className={styles.spinner}/> : hasPassword ? '🔑 Update Password' : '🔒 Set Password'}
             </button>
           )}
         </div>
@@ -178,16 +159,146 @@ function PasswordSection({ serverInfo, onChanged }) {
   );
 }
 
+// ── Upload Size Section ───────────────────────────────────────────
+
+const SIZE_PRESETS = [
+  { label: '100 MB',  value: 100  },
+  { label: '500 MB',  value: 500  },
+  { label: '1 GB',    value: 1024 },
+  { label: '5 GB',    value: 5120 },
+  { label: '10 GB',   value: 10240},
+];
+
+function UploadSizeSection({ serverInfo, onChanged }) {
+  const toast = useToast();
+  const [mb,      setMb]      = useState(serverInfo?.maxMB ?? 500);
+  const [custom,  setCustom]  = useState('');
+  const [mode,    setMode]    = useState('preset'); // preset | custom
+  const [loading, setLoading] = useState(false);
+
+  // Sync when serverInfo loads
+  useEffect(() => {
+    if (serverInfo?.maxMB) {
+      const preset = SIZE_PRESETS.find(p => p.value === serverInfo.maxMB);
+      if (preset) { setMb(serverInfo.maxMB); setMode('preset'); }
+      else         { setCustom(String(serverInfo.maxMB)); setMode('custom'); }
+    }
+  }, [serverInfo?.maxMB]);
+
+  async function handleApply() {
+    const val = mode === 'custom' ? parseInt(custom, 10) : mb;
+    if (!val || val < 1) { toast('Enter a valid size', 'error'); return; }
+    if (val > 100_000)   { toast('Max is 100 000 MB (100 GB)', 'error'); return; }
+    setLoading(true);
+    try {
+      await setMaxUploadSize(val);
+      toast(`Max upload set to ${val >= 1024 ? `${(val/1024).toFixed(1)} GB` : `${val} MB`} ✓`, 'success');
+      onChanged?.();
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const currentMB  = serverInfo?.maxMB ?? 500;
+  const displayCur = currentMB >= 1024
+    ? `${(currentMB / 1024).toFixed(1)} GB`
+    : `${currentMB} MB`;
+
+  return (
+    <div className={`${styles.section} glass`}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionIcon}>📦</span>
+        <div>
+          <div className={styles.sectionTitle}>Max Upload Size</div>
+          <div className={styles.sectionSub}>
+            Currently <strong style={{ color: 'var(--text)' }}>{displayCur}</strong> per file
+          </div>
+        </div>
+        <div className={`${styles.pill} ${styles.pillNeutral}`}>{displayCur}</div>
+      </div>
+
+      {/* Mode toggle */}
+      <div className={styles.modeToggle}>
+        <button
+          className={`${styles.modeBtn} ${mode === 'preset' ? styles.modeBtnActive : ''}`}
+          onClick={() => setMode('preset')}
+        >Presets</button>
+        <button
+          className={`${styles.modeBtn} ${mode === 'custom' ? styles.modeBtnActive : ''}`}
+          onClick={() => setMode('custom')}
+        >Custom</button>
+      </div>
+
+      {mode === 'preset' ? (
+        <div className={styles.presetGrid}>
+          {SIZE_PRESETS.map(p => (
+            <button
+              key={p.value}
+              className={`${styles.presetBtn} ${mb === p.value ? styles.presetBtnActive : ''}`}
+              onClick={() => setMb(p.value)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.customRow}>
+          <input
+            type="number"
+            className={styles.input}
+            placeholder="e.g. 2048"
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            min={1}
+            max={100000}
+          />
+          <span className={styles.customUnit}>MB</span>
+        </div>
+      )}
+
+      {/* Visual bar */}
+      <div className={styles.sizeBarWrap}>
+        <div className={styles.sizeBarTrack}>
+          <div
+            className={styles.sizeBarFill}
+            style={{
+              width: `${Math.min(100, ((mode === 'custom' ? parseInt(custom)||0 : mb) / 10240) * 100)}%`
+            }}
+          />
+        </div>
+        <span className={styles.sizeBarLabel}>
+          {mode === 'custom'
+            ? (parseInt(custom) >= 1024 ? `${(parseInt(custom)/1024).toFixed(1)} GB` : `${custom || 0} MB`)
+            : (mb >= 1024 ? `${(mb/1024).toFixed(1)} GB` : `${mb} MB`)
+          }
+        </span>
+      </div>
+
+      <button
+        className={styles.btn}
+        onClick={handleApply}
+        disabled={loading}
+        style={{ width: '100%', marginTop: 4 }}
+      >
+        {loading ? <span className={styles.spinner}/> : '💾 Apply Size Limit'}
+      </button>
+    </div>
+  );
+}
+
+// ── Server Info Section ───────────────────────────────────────────
+
 function ServerInfoSection({ serverInfo }) {
   if (!serverInfo) return null;
   const rows = [
-    { label: 'Server IP',        value: `${serverInfo.ip}:${serverInfo.port}` },
-    { label: 'Max upload size',  value: `${serverInfo.maxMB} MB` },
-    { label: 'Encryption',       value: serverInfo.encrypted ? '✓ AES-256-GCM at rest' : 'Off (set LOCALDROP_ENCRYPT=1)' },
-    { label: 'Token TTL',        value: `${serverInfo.tokenTTLHours}h` },
-    { label: 'Auth',             value: serverInfo.passwordRequired ? 'bcrypt password' : 'Open access' },
+    { label: 'Server IP',    value: `${serverInfo.ip}:${serverInfo.port}` },
+    { label: 'Max upload',   value: serverInfo.maxMB >= 1024 ? `${(serverInfo.maxMB/1024).toFixed(1)} GB` : `${serverInfo.maxMB} MB` },
+    { label: 'Encryption',   value: serverInfo.encrypted ? '✓ AES-256-GCM at rest' : 'Off' },
+    { label: 'Token TTL',    value: `${serverInfo.tokenTTLHours}h` },
+    { label: 'Auth',         value: serverInfo.passwordRequired ? 'bcrypt password' : 'Open access' },
   ];
-
   return (
     <div className={`${styles.section} glass`}>
       <div className={styles.sectionHeader}>
@@ -209,6 +320,8 @@ function ServerInfoSection({ serverInfo }) {
   );
 }
 
+// ── Main export ───────────────────────────────────────────────────
+
 export default function SettingsPanel({ active }) {
   const [serverInfo, setServerInfo] = useState(null);
 
@@ -219,14 +332,13 @@ export default function SettingsPanel({ active }) {
     } catch (_) {}
   }
 
-  useEffect(() => {
-    if (active) reload();
-  }, [active]);
+  useEffect(() => { if (active) reload(); }, [active]);
 
   return (
     <div className={styles.wrap}>
-      <PasswordSection serverInfo={serverInfo} onChanged={reload} />
-      <ServerInfoSection serverInfo={serverInfo} />
+      <PasswordSection    serverInfo={serverInfo} onChanged={reload} />
+      <UploadSizeSection  serverInfo={serverInfo} onChanged={reload} />
+      <ServerInfoSection  serverInfo={serverInfo} />
     </div>
   );
 }

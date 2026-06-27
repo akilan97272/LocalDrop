@@ -30,9 +30,9 @@
 
   /* ── Glass panel layers ── */
   /* Base glass — most panels */
-  --glass-bg:           rgba(255, 255, 255, 0.055);
+  --glass-bg:           rgba(255, 255, 255, 0.072);
   --glass-bg-hover:     rgba(255, 255, 255, 0.085);
-  --glass-bg-strong:    rgba(255, 255, 255, 0.09);
+  --glass-bg-strong:    rgba(255, 255, 255, 0.11);
   --glass-bg-deeper:    rgba(255, 255, 255, 0.038);
 
   /* Borders — thin specular highlight + subtle rim */
@@ -85,6 +85,10 @@
   --orb1: rgba(79, 142, 247, 0.12);
   --orb2: rgba(167, 139, 250, 0.09);
   --orb3: rgba(52, 211, 153, 0.06);
+
+  /* Background image — place background_dark.png in frontend/public/ */
+  --bg-image:        url('/background_dark.png');
+  --bg-image-filter: brightness(0.55) saturate(1.2);
 }
 
 /* ══════════════════════════════════════════════════
@@ -139,4 +143,8 @@
   --orb1: rgba(37, 99, 235, 0.08);
   --orb2: rgba(124, 58, 237, 0.06);
   --orb3: rgba(5, 150, 105, 0.05);
+
+  /* Background image — place background_light.png in frontend/public/ */
+  --bg-image:        url('/background_light.png');
+  --bg-image-filter: brightness(0.92) saturate(1.1);
 }
