@@ -6,7 +6,7 @@
 
 export const BASE_URL = import.meta.env.VITE_API_URL || '';
 
-function getToken() {
+export function getToken() {
   return localStorage.getItem('localdrop_token') || '';
 }
 
@@ -147,12 +147,19 @@ export function uploadFile(file, { onProgress, signal } = {}) {
   });
 }
 
-/** Single-file download with Range support (browser handles it) */
+/** Single-file download — forces browser Save As dialog */
 export function downloadFile(filename) {
   const a = document.createElement('a');
   a.href = `${BASE_URL}/download/${encodeURIComponent(filename)}?token=${getToken()}`;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+}
+
+/** URL for inline preview (images, video, audio, PDF) — no forced download */
+export function previewUrl(filename) {
+  return `${BASE_URL}/download/${encodeURIComponent(filename)}?token=${getToken()}&inline=1`;
 }
 
 /** Bulk download as ZIP */

@@ -365,3 +365,172 @@
   0%   { transform: scale(0.75); opacity: 0.5; }
   100% { transform: scale(1);    opacity: 1; }
 }
+
+/* ══════════════════════════════════════════════════
+   Grid view
+══════════════════════════════════════════════════ */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  animation: fadeIn 0.2s ease;
+}
+
+.gridCard {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-base);
+  animation: slideUp 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gridCard:hover {
+  border-color: var(--glass-border-hover);
+  background: var(--glass-bg-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--glass-shadow-lg), inset 0 1px 0 var(--glass-border-top);
+}
+
+.gridCard:hover .gridActions { opacity: 1; }
+.gridCard:active { transform: scale(0.97); }
+
+.gridCardSelected {
+  border-color: rgba(79,142,247,0.45) !important;
+  background: var(--accent-dim) !important;
+  box-shadow: 0 0 0 1px var(--accent-dim), var(--glass-shadow), inset 0 1px 0 var(--glass-border-top) !important;
+}
+
+/* Checkbox */
+.gridCheck {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 2;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--glass-bg-strong);
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur-xs);
+  -webkit-backdrop-filter: var(--glass-blur-xs);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.gridCard:hover .gridCheck,
+.gridCardSelected .gridCheck { opacity: 1; }
+
+/* Thumbnail */
+.gridThumb {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-deeper);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.gridThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.gridCard:hover .gridThumbImg { transform: scale(1.04); }
+
+.gridThumbIcon {
+  font-size: 2.8rem;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+
+/* Kind badge overlay on thumbnail */
+.gridKindBadge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 0.55rem;
+  padding: 2px 6px;
+  border-radius: 99px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Override kind colours in grid for readability */
+.gridCard [class*="kind_"] {
+  background: rgba(0,0,0,0.55) !important;
+  color: rgba(255,255,255,0.85) !important;
+  border: none !important;
+}
+
+/* Info strip */
+.gridInfo {
+  padding: 8px 10px;
+  flex: 1;
+}
+
+.gridName {
+  font-size: 0.76rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.gridMeta {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+/* Hover action strip */
+.gridActions {
+  display: flex;
+  gap: 3px;
+  padding: 6px 8px;
+  background: var(--glass-bg-strong);
+  border-top: 1px solid var(--divider);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.gridActBtn {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--glass-bg-deeper);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gridActBtn:hover { background: var(--glass-bg); color: var(--text); }
+.gridActBtn.deleteBtn:hover { background: var(--danger-dim); color: var(--danger); border-color: rgba(248,113,113,0.3); }
+
+/* ── Preview eye button in list/tree rows ── */
+.actionBtn:first-child { /* preview btn */ }
+
+/* ── Mobile grid: 2 columns ── */
+@media (max-width: 500px) {
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gridThumbIcon { font-size: 2.2rem; }
+  .gridActions { opacity: 1; } /* always show on touch */
+  .gridCheck   { opacity: 1; }
+}
