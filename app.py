@@ -701,14 +701,6 @@ else:
             "hint": "Run `npm run build` in frontend/ to generate static/react/",
         },
     )
-
-#for the icon
-@app.get("/favicon.png", include_in_schema=False)
-async def favicon_png():
-    f = _STATIC_DIR / "favicon.png"
-    if f.is_file():
-        return _FileResponse(str(f))
-    raise HTTPException(status_code=404)
 # ──────────────────────────────────────────────────────────────────
 #  Dev entry point
 # ──────────────────────────────────────────────────────────────────
