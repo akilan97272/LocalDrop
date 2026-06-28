@@ -87,7 +87,7 @@
   --orb3: rgba(52, 211, 153, 0.06);
 
   /* Background image — place background_dark.png in frontend/public/ */
-  --bg-image:        url('/background_dark.png');
+  --bg-image:        url('./assets/background_dark.png');
   --bg-image-filter: brightness(0.55) saturate(1.2);
 }
 
@@ -145,6 +145,6 @@
   --orb3: rgba(5, 150, 105, 0.05);
 
   /* Background image — place background_light.png in frontend/public/ */
-  --bg-image:        url('/background_light.png');
+  --bg-image:        url('./assets/background_light.png');
   --bg-image-filter: brightness(0.92) saturate(1.1);
 }
