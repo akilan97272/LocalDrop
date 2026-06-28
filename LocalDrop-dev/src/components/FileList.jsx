@@ -213,10 +213,17 @@ function TreeFileRow({ file, onPreview, onDownload, onDelete }) {
 
 export default function FileList({ files, onRefresh }) {
   const toast = useToast();
-  const [view,      setView]      = useState('list'); // list | grid | tree
+  const [view,      setView]      = useState('grid'); // list | grid | tree
   const [selected,  setSelected]  = useState(new Set());
   const [collapsed, setCollapsed] = useState(new Set());
   const [preview,   setPreview]   = useState(null);  // index into files[]
+  const [reloading, setReloading] = useState(false);
+
+  async function handleReload() {
+    setReloading(true);
+    await onRefresh();
+    setTimeout(() => setReloading(false), 600);
+  }
 
   function toggleSelect(name) {
     setSelected(prev => {
@@ -275,6 +282,13 @@ export default function FileList({ files, onRefresh }) {
       <div className={`${styles.empty} glass`}>
         <span className={styles.emptyIcon}>📭</span>
         <p>No files yet — upload something!</p>
+        <button
+          className={`${styles.reloadBtn} ${reloading ? styles.reloadBtnSpin : ''}`}
+          onClick={handleReload}
+          disabled={reloading}
+          style={{ margin: '12px auto 0' }}
+          title="Reload"
+        >↻</button>
       </div>
     );
   }
@@ -301,6 +315,12 @@ export default function FileList({ files, onRefresh }) {
               <button className={styles.toolBtn} onClick={handleBulkDownload}>⬇ ZIP</button>
             </>
           )}
+          <button
+            className={`${styles.reloadBtn} ${reloading ? styles.reloadBtnSpin : ''}`}
+            onClick={handleReload}
+            title="Reload file list"
+            disabled={reloading}
+          >↻</button>
           <div className={`${styles.viewToggle} glass`}>
             <button className={view === 'list' ? styles.viewActive : ''} onClick={() => setView('list')} title="List view">≡</button>
             <button className={view === 'grid' ? styles.viewActive : ''} onClick={() => setView('grid')} title="Grid view">⊞</button>
