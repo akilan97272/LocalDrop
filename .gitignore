@@ -9,3 +9,6 @@ localdrop.pid
 static/*
 logs/*
 .password_*
+.sessions/*
+.revoked_tokens
+.config
