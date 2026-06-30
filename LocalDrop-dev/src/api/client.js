@@ -238,3 +238,45 @@ export async function setMaxUploadSize(mb) {
   });
   return handleResponse(res);
 }
+
+// ── Sessions ──────────────────────────────────────────────────────
+
+export async function listSessions() {
+  const res = await fetch(`${BASE_URL}/api/sessions`);
+  return handleResponse(res);
+}
+
+export async function createSession(name, password) {
+  const res = await fetch(`${BASE_URL}/api/sessions/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function joinSession(name, password = '') {
+  const res = await fetch(`${BASE_URL}/api/sessions/join`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function leaveSession() {
+  await fetch(`${BASE_URL}/api/sessions/leave`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  localStorage.removeItem('localdrop_session');
+  localStorage.removeItem('localdrop_token');
+}
+
+export async function disbandSession(sessionName) {
+  const res = await fetch(`${BASE_URL}/api/sessions/${encodeURIComponent(sessionName)}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
+}

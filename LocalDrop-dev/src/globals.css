@@ -21,6 +21,18 @@ body {
   overflow-x: hidden;
 }
 
+/* ══════════════════════════════════════════════════
+   Background image layer
+   Place background_dark.png / background_light.png
+   in the  frontend/public/  folder.
+   Vite copies public/ straight to the build output.
+
+   The image sits behind everything else:
+     z-index -2  → background image (covers + fills)
+     z-index -1  → ambient orb gradients (blend on top)
+     z-index  0  → app content
+══════════════════════════════════════════════════ */
+
 body::before {
   content: '';
   position: fixed;

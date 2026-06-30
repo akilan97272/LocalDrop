@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════════
-   LocalDrop — Theme System  (Apple-glass edition)
-   Add new themes by creating a [data-theme="name"] block.
+   LocalDrop — Theme System
+   Primary accent: emerald green (#1db954 family)
+   matching the LocalDrop logo mark.
 ══════════════════════════════════════════════════ */
 
 :root {
@@ -20,50 +21,42 @@
 }
 
 /* ══════════════════════════════════════════════════
-   DARK THEME  — visionOS / macOS dark glass
+   DARK THEME
 ══════════════════════════════════════════════════ */
 [data-theme="dark"],
 :root {
-  /* ── Scene background ── */
-  --bg:            #06080f;
-  --bg-noise:      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  --bg: #060d09;
 
-  /* ── Glass panel layers ── */
-  /* Base glass — most panels */
-  --glass-bg:           rgba(255, 255, 255, 0.072);
-  --glass-bg-hover:     rgba(255, 255, 255, 0.085);
-  --glass-bg-strong:    rgba(255, 255, 255, 0.11);
-  --glass-bg-deeper:    rgba(255, 255, 255, 0.038);
+  --glass-bg:           rgba(255, 255, 255, 0.068);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.095);
+  --glass-bg-strong:    rgba(255, 255, 255, 0.108);
+  --glass-bg-deeper:    rgba(255, 255, 255, 0.036);
 
-  /* Borders — thin specular highlight + subtle rim */
   --glass-border:       rgba(255, 255, 255, 0.10);
-  --glass-border-hover: rgba(255, 255, 255, 0.22);
-  --glass-border-top:   rgba(255, 255, 255, 0.18); /* inner top highlight */
+  --glass-border-hover: rgba(29, 185, 84, 0.40);
+  --glass-border-top:   rgba(255, 255, 255, 0.18);
 
-  /* Shadows — layered depth */
   --glass-shadow:    0 2px 8px rgba(0,0,0,0.32), 0 8px 32px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.10);
   --glass-shadow-lg: 0 4px 16px rgba(0,0,0,0.40), 0 20px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
   --glass-shadow-xl: 0 8px 32px rgba(0,0,0,0.50), 0 40px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.14);
 
-  /* Blur amounts */
   --glass-blur:    saturate(180%) blur(28px);
   --glass-blur-sm: saturate(160%) blur(16px);
   --glass-blur-xs: saturate(140%) blur(8px);
 
-  /* ── Card surfaces ── */
   --card:        rgba(255, 255, 255, 0.06);
   --card-hover:  rgba(255, 255, 255, 0.10);
   --card-border: rgba(255, 255, 255, 0.10);
 
-  /* ── Accents ── */
-  --accent:       #4f8ef7;
-  --accent-dim:   rgba(79, 142, 247, 0.14);
-  --accent-hover: #6ba4ff;
-  --accent-glow:  rgba(79, 142, 247, 0.35);
-  --accent2:      #a78bfa;
-  --accent2-dim:  rgba(167, 139, 250, 0.14);
+  /* ── Green accent — logo match ── */
+  --accent:       #1db954;
+  --accent-dim:   rgba(29, 185, 84, 0.14);
+  --accent-hover: #22d460;
+  --accent-glow:  rgba(29, 185, 84, 0.38);
+  --accent2:      #0ea472;
+  --accent2-dim:  rgba(14, 164, 114, 0.14);
 
-  /* ── Semantic ── */
+  /* Semantic */
   --success:     #34d399;
   --success-dim: rgba(52, 211, 153, 0.12);
   --danger:      #f87171;
@@ -71,31 +64,28 @@
   --warn:        #fbbf24;
   --warn-dim:    rgba(251, 191, 36, 0.12);
 
-  /* ── Typography ── */
   --text:           rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.55);
   --muted:          rgba(255, 255, 255, 0.30);
 
-  /* ── Misc ── */
-  --scrollbar-thumb: rgba(255, 255, 255, 0.12);
+  --scrollbar-thumb: rgba(29, 185, 84, 0.20);
   --overlay:         rgba(0, 0, 0, 0.72);
   --divider:         rgba(255, 255, 255, 0.07);
 
-  /* ── Ambient orbs ── */
-  --orb1: rgba(79, 142, 247, 0.12);
-  --orb2: rgba(167, 139, 250, 0.09);
+  /* Ambient orbs — green tinted */
+  --orb1: rgba(29, 185, 84, 0.10);
+  --orb2: rgba(14, 164, 114, 0.08);
   --orb3: rgba(52, 211, 153, 0.06);
 
-  /* Background image — place background_dark.png in frontend/public/ */
-  --bg-image:        url('./assets/background_dark.png');
+  --bg-image:        url('/background_dark.png');
   --bg-image-filter: brightness(0.55) saturate(1.2);
 }
 
 /* ══════════════════════════════════════════════════
-   LIGHT THEME  — macOS light / iOS frosted glass
+   LIGHT THEME
 ══════════════════════════════════════════════════ */
 [data-theme="light"] {
-  --bg:            #e8edf5;
+  --bg: #edf5f0;
 
   --glass-bg:           rgba(255, 255, 255, 0.62);
   --glass-bg-hover:     rgba(255, 255, 255, 0.78);
@@ -103,7 +93,7 @@
   --glass-bg-deeper:    rgba(255, 255, 255, 0.44);
 
   --glass-border:       rgba(0, 0, 0, 0.07);
-  --glass-border-hover: rgba(0, 0, 0, 0.14);
+  --glass-border-hover: rgba(29, 185, 84, 0.35);
   --glass-border-top:   rgba(255, 255, 255, 0.90);
 
   --glass-shadow:    0 2px 8px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.90);
@@ -118,12 +108,13 @@
   --card-hover:  rgba(255, 255, 255, 0.88);
   --card-border: rgba(0, 0, 0, 0.06);
 
-  --accent:       #2563eb;
-  --accent-dim:   rgba(37, 99, 235, 0.10);
-  --accent-hover: #1d4ed8;
-  --accent-glow:  rgba(37, 99, 235, 0.20);
-  --accent2:      #7c3aed;
-  --accent2-dim:  rgba(124, 58, 237, 0.10);
+  /* ── Green accent — logo match ── */
+  --accent:       #16a34a;
+  --accent-dim:   rgba(22, 163, 74, 0.10);
+  --accent-hover: #15803d;
+  --accent-glow:  rgba(22, 163, 74, 0.22);
+  --accent2:      #0d9488;
+  --accent2-dim:  rgba(13, 148, 136, 0.10);
 
   --success:     #059669;
   --success-dim: rgba(5, 150, 105, 0.10);
@@ -136,15 +127,14 @@
   --text-secondary: rgba(0, 0, 0, 0.50);
   --muted:          rgba(0, 0, 0, 0.30);
 
-  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb: rgba(22, 163, 74, 0.22);
   --overlay:         rgba(0, 0, 0, 0.40);
   --divider:         rgba(0, 0, 0, 0.06);
 
-  --orb1: rgba(37, 99, 235, 0.08);
-  --orb2: rgba(124, 58, 237, 0.06);
+  --orb1: rgba(22, 163, 74, 0.08);
+  --orb2: rgba(13, 148, 136, 0.06);
   --orb3: rgba(5, 150, 105, 0.05);
 
-  /* Background image — place background_light.png in frontend/public/ */
-  --bg-image:        url('./assets/background_light.png');
+  --bg-image:        url('/background_light.png');
   --bg-image-filter: brightness(0.92) saturate(1.1);
 }

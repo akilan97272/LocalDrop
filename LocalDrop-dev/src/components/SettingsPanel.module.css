@@ -424,3 +424,131 @@
 @media (max-width: 500px) {
   .presetGrid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ── Disband section ── */
+.pillDanger {
+  background: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid rgba(248,113,113,0.25);
+}
+
+.disbandConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: slideUp 0.22s ease;
+}
+
+.disbandWarning {
+  display: flex;
+  gap: 14px;
+  background: var(--danger-dim);
+  border: 1px solid rgba(248,113,113,0.22);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.disbandWarningIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+
+.disbandWarningTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--danger);
+  margin-bottom: 6px;
+}
+
+.disbandList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.disbandList li {
+  font-size: 0.80rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.disbandList li strong {
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.disbandActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.btnGhost {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg-deeper);
+  color: var(--text-secondary);
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: inset 0 1px 0 var(--glass-border-top);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 42px;
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  color: var(--text);
+}
+
+.btnGhost:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btnDangerFull {
+  flex: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 16px;
+  background: var(--danger);
+  border: none;
+  border-radius: 99px;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(248,113,113,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 42px;
+  letter-spacing: -0.01em;
+}
+
+.btnDangerFull:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(248,113,113,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.btnDangerFull:active:not(:disabled) { transform: scale(0.97); }
+
+.btnDangerFull:disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+@media (max-width: 500px) {
+  .disbandActions { flex-direction: column-reverse; }
+  .btnGhost, .btnDangerFull { flex: none; width: 100%; }
+}

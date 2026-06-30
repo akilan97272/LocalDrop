@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { setPassword, getServerInfo, setMaxUploadSize } from '../api/client';
+import { setPassword, getServerInfo, setMaxUploadSize, disbandSession } from '../api/client';
 import { useToast } from '../hooks/useToast';
 import styles from './SettingsPanel.module.css';
 
@@ -320,9 +320,133 @@ function ServerInfoSection({ serverInfo }) {
   );
 }
 
+// ── Disband Section ──────────────────────────────────────────────
+
+function DisbandSection({ session, isMain, onDisbanded }) {
+  const toast = useToast();
+  const [phase,    setPhase]    = useState('idle'); // idle | confirm | disbanding
+  const [inputVal, setInputVal] = useState('');
+
+  // Can't disband main session
+  if (isMain) {
+    return (
+      <div className={`${styles.section} glass`}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionIcon}>🗑️</span>
+          <div>
+            <div className={styles.sectionTitle}>Disband Room</div>
+            <div className={styles.sectionSub}>
+              The Main session cannot be disbanded — it is the default room.
+            </div>
+          </div>
+          <div className={`${styles.pill} ${styles.pillNeutral}`}>N/A</div>
+        </div>
+      </div>
+    );
+  }
+
+  async function handleDisband() {
+    if (inputVal.trim() !== session) {
+      toast('Room name does not match. Type it exactly to confirm.', 'error');
+      return;
+    }
+    setPhase('disbanding');
+    try {
+      await disbandSession(session);
+      toast(`Room "${session}" has been permanently deleted.`, 'success', 5000);
+      onDisbanded?.();
+    } catch (err) {
+      toast(err.message || 'Failed to disband room', 'error');
+      setPhase('confirm');
+    }
+  }
+
+  return (
+    <div className={`${styles.section} glass`}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionIcon}>🗑️</span>
+        <div>
+          <div className={styles.sectionTitle}>Disband Room</div>
+          <div className={styles.sectionSub}>
+            Permanently delete this room and <strong style={{color:'var(--danger)'}}>all its files</strong>.
+            This cannot be undone.
+          </div>
+        </div>
+        <div className={`${styles.pill} ${styles.pillDanger}`}>{session}</div>
+      </div>
+
+      {phase === 'idle' && (
+        <button
+          className={`${styles.btn} ${styles.btnDanger}`}
+          style={{ width: '100%' }}
+          onClick={() => setPhase('confirm')}
+        >
+          🗑️ Disband This Room
+        </button>
+      )}
+
+      {(phase === 'confirm' || phase === 'disbanding') && (
+        <div className={styles.disbandConfirm}>
+          <div className={styles.disbandWarning}>
+            <span className={styles.disbandWarningIcon}>⚠️</span>
+            <div>
+              <div className={styles.disbandWarningTitle}>
+                This will permanently delete:
+              </div>
+              <ul className={styles.disbandList}>
+                <li>All files uploaded to <strong>{session}</strong></li>
+                <li>The room clipboard</li>
+                <li>The room folder and all its contents</li>
+                <li>The room entry from the session database</li>
+              </ul>
+              <div className={styles.disbandWarningTitle} style={{marginTop: 10}}>
+                This action is <strong>irreversible</strong>.
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.field} style={{marginTop: 14}}>
+            <label className={styles.label}>
+              Type the room name <strong style={{color:'var(--text)'}}>{session}</strong> to confirm:
+            </label>
+            <input
+              type="text"
+              className={`${styles.input} ${inputVal && inputVal !== session ? styles.inputMismatch : ''}`}
+              placeholder={session}
+              value={inputVal}
+              onChange={e => setInputVal(e.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          <div className={styles.disbandActions}>
+            <button
+              className={`${styles.btn} ${styles.btnGhost}`}
+              onClick={() => { setPhase('idle'); setInputVal(''); }}
+              disabled={phase === 'disbanding'}
+            >
+              Cancel
+            </button>
+            <button
+              className={`${styles.btn} ${styles.btnDangerFull}`}
+              onClick={handleDisband}
+              disabled={phase === 'disbanding' || inputVal.trim() !== session}
+            >
+              {phase === 'disbanding'
+                ? <><span className={styles.spinner}/> Deleting…</>
+                : '🗑️ Yes, Delete Everything'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main export ───────────────────────────────────────────────────
 
-export default function SettingsPanel({ active }) {
+export default function SettingsPanel({ active, session, isMainSession, onDisbanded }) {
   const [serverInfo, setServerInfo] = useState(null);
 
   async function reload() {
@@ -338,6 +462,11 @@ export default function SettingsPanel({ active }) {
     <div className={styles.wrap}>
       <PasswordSection    serverInfo={serverInfo} onChanged={reload} />
       <UploadSizeSection  serverInfo={serverInfo} onChanged={reload} />
+      <DisbandSection
+        session={session || 'main'}
+        isMain={isMainSession}
+        onDisbanded={onDisbanded}
+      />
       <ServerInfoSection  serverInfo={serverInfo} />
     </div>
   );
